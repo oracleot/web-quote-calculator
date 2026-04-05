@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SelectionItem } from '@/hooks/useSelectionList';
 
@@ -25,12 +25,37 @@ export default function SelectionBottomBar({
   const total = livePrice + featureTotal;
   const pageCount = selectedPages.length;
   const allItems = [...selectedPages, ...selectedFeatures];
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Move focus to sheet content when opened, restore to trigger when closed
+  useEffect(() => {
+    if (sheetOpen) {
+      const focusable = sheetRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusable?.focus();
+    } else {
+      triggerRef.current?.focus();
+    }
+  }, [sheetOpen]);
+
+  // Escape key closes the sheet
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSheetOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [sheetOpen]);
 
   return (
     <>
       {/* Bottom bar — mobile only */}
       <div className="builder-bottom-bar sm:hidden">
         <button
+          ref={triggerRef}
           className="flex-1 flex items-center gap-2 min-w-0"
           onClick={() => setSheetOpen(true)}
           aria-label="View selection details"
@@ -78,6 +103,10 @@ export default function SelectionBottomBar({
             {/* Sheet */}
             <motion.div
               key="sheet-panel"
+              ref={sheetRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="sheet-heading"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -92,7 +121,7 @@ export default function SelectionBottomBar({
 
               <div className="px-5 pb-6 pt-2">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">Your Selection</p>
+                  <p id="sheet-heading" className="text-sm font-semibold text-[var(--text-primary)]">Your Selection</p>
                   <button
                     onClick={() => setSheetOpen(false)}
                     className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"

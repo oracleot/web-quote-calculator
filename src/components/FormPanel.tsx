@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import InquiryForm from '@/components/InquiryForm';
@@ -41,6 +42,28 @@ export default function FormPanel({
   error,
 }: FormPanelProps) {
   const isMobile = useIsMobile();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Focus first focusable element in panel when opened
+  useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const focusable = panel.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    focusable?.focus();
+  }, [open]);
+
+  // Escape key closes the panel
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
   return (
     <AnimatePresence>
@@ -61,6 +84,10 @@ export default function FormPanel({
             /* Mobile: bottom sheet */
             <motion.div
               key="form-panel-mobile"
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="form-panel-heading-mobile"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -75,7 +102,7 @@ export default function FormPanel({
 
               <div className="px-5 pb-8 pt-2">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                  <h3 id="form-panel-heading-mobile" className="text-base font-semibold text-[var(--text-primary)]">
                     Submit Inquiry
                   </h3>
                   <button
@@ -110,6 +137,10 @@ export default function FormPanel({
             /* Desktop: right slide-in panel */
             <motion.div
               key="form-panel-desktop"
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="form-panel-heading-desktop"
               initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
@@ -118,7 +149,7 @@ export default function FormPanel({
             >
               <div className="p-6 pt-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                  <h3 id="form-panel-heading-desktop" className="text-lg font-semibold text-[var(--text-primary)]">
                     Submit Inquiry
                   </h3>
                   <button

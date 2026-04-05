@@ -14,6 +14,8 @@ import { useDirection } from '@/hooks/useDirection';
 import { useSelectionList } from '@/hooks/useSelectionList';
 
 const TOTAL_STEPS = 4;
+// Stable empty array reference — avoids inline [] literals defeating useMemo
+const EMPTY_IDS: string[] = Object.freeze([]) as unknown as string[];
 
 const STEP_TITLES = [
   { title: 'Choose Your Pages', sub: 'Select the pages your website needs' },
@@ -60,8 +62,8 @@ export default function Home() {
   );
 
   // Selection list items for sidebar / bottom bar
-  const selectedPageItems = useSelectionList(selectedPages, []);
-  const selectedFeatureItems = useSelectionList([], selectedFeatures);
+  const selectedPageItems = useSelectionList(selectedPages, EMPTY_IDS);
+  const selectedFeatureItems = useSelectionList(EMPTY_IDS, selectedFeatures);
 
   const canProceed = () => {
     if (step === 1) return selectedPages.length > 0;
@@ -204,7 +206,7 @@ export default function Home() {
               Two-column: card grid (65%) + sticky sidebar (35%)
           ═══════════════════════════════════════════════ */}
           {isBuilderPhase && (
-            <div className="max-w-5xl mx-auto">
+            <div className="builder-layout-wrapper max-w-5xl mx-auto">
               <div className="builder-layout">
 
                 {/* Card grid column (65%) */}
@@ -321,7 +323,7 @@ export default function Home() {
                       originalTotal={quote.total}
                       onEditPages={() => { goPrev(); setStep(1); }}
                       onEditFeatures={() => { goPrev(); setStep(2); }}
-                      onProceed={() => setShowFormPanel(true)}
+                      onProceed={() => { setShowFormPanel(true); setStep(4); }}
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -365,7 +367,7 @@ export default function Home() {
       {/* Form panel overlay (step 3 → "Proceed to Submit") */}
       <FormPanel
         open={showFormPanel}
-        onClose={() => setShowFormPanel(false)}
+        onClose={() => { setShowFormPanel(false); setStep(3); }}
         name={clientName}
         email={clientEmail}
         couponCode={couponCode}
