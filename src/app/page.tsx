@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StepIndicator from '@/components/StepIndicator';
 import PageSelector from '@/components/PageSelector';
 import FeatureSelector from '@/components/FeatureSelector';
-import QuoteSummary from '@/components/QuoteSummary';
-import InquiryForm from '@/components/InquiryForm';
+import BuilderSidebar from '@/components/BuilderSidebar';
+import SelectionBottomBar from '@/components/SelectionBottomBar';
+import QuoteReviewPanel from '@/components/QuoteReviewPanel';
+import FormPanel from '@/components/FormPanel';
 import { calculateQuote } from '@/lib/pricing';
 import { useDirection } from '@/hooks/useDirection';
+import { useSelectionList } from '@/hooks/useSelectionList';
 
 const TOTAL_STEPS = 4;
 
@@ -34,19 +37,31 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [showFormPanel, setShowFormPanel] = useState(false);
 
   const { direction, goNext, goPrev } = useDirection();
 
-  // Live price on Step 1 — base price + any extra pages
+  // Derived: live page price (no features)
   const livePrice = useMemo(() => {
     const quote = calculateQuote(selectedPages, []);
     return quote.total;
   }, [selectedPages]);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Derived: feature total only
+  const featureTotal = useMemo(() => {
+    const quote = calculateQuote([], selectedFeatures);
+    return quote.featuresCost;
+  }, [selectedFeatures]);
+
+  // Full quote (pages + features)
+  const quote = useMemo(
+    () => calculateQuote(selectedPages, selectedFeatures),
+    [selectedPages, selectedFeatures]
+  );
+
+  // Selection list items for sidebar / bottom bar
+  const selectedPageItems = useSelectionList(selectedPages, []);
+  const selectedFeatureItems = useSelectionList([], selectedFeatures);
 
   const canProceed = () => {
     if (step === 1) return selectedPages.length > 0;
@@ -81,8 +96,6 @@ export default function Home() {
       setCouponDiscount(null);
     }
   };
-
-  const quote = calculateQuote(selectedPages, selectedFeatures);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -140,6 +153,9 @@ export default function Home() {
     setStep((s) => Math.max(1, s - 1));
   };
 
+  // Whether we're in builder phase (steps 1–2) vs review phase (step 3)
+  const isBuilderPhase = step === 1 || step === 2;
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Ambient background */}
@@ -147,170 +163,172 @@ export default function Home() {
       <div className="bg-grid absolute inset-0 pointer-events-none" />
 
       {/* Content */}
-      <div className={`relative z-10 min-h-screen flex flex-col ${mounted ? '' : 'opacity-0'}`}
-           style={{ transition: 'opacity 0.5s ease' }}>
+      <div className="relative z-10 min-h-screen flex flex-col">
 
         {/* Header */}
         <header className="pt-10 pb-6 px-4 text-center">
-          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[rgba(129,140,248,0.25)] bg-[rgba(129,140,248,0.08)] text-xs font-medium text-[#818cf8] mb-6 animate-fade-in`}
-               style={{ animationDelay: '0ms' }}>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[rgba(129,140,248,0.25)] bg-[rgba(129,140,248,0.08)] text-xs font-medium text-[#818cf8] mb-6 animate-fade-in">
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             Instant estimate · No commitment
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2 animate-fade-in-up font-display"
-              style={{ animationDelay: '50ms' }}>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2 animate-fade-in-up font-display">
             Website Quote Calculator
           </h1>
-          <p className="text-[#94a3b8] text-base max-w-md mx-auto animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <p className="text-[#94a3b8] text-base max-w-md mx-auto animate-fade-in-up">
             Build your perfect website quote in minutes — transparent pricing, no surprises.
           </p>
         </header>
 
         {/* Step Indicator */}
-        <div className="px-4 mb-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
+        <div className="px-4 mb-6 animate-fade-in">
           <StepIndicator currentStep={step} totalSteps={TOTAL_STEPS} />
         </div>
 
-        {/* Main card */}
+        {/* Step header */}
+        <div className="mb-5 animate-fade-in-up text-center px-4">
+          <h2 className="text-xl font-bold text-white mb-0.5 font-display">
+            {STEP_TITLES[step - 1].title}
+          </h2>
+          <p className="text-sm text-[#64748b]">
+            {STEP_TITLES[step - 1].sub}
+          </p>
+        </div>
+
+        {/* Main content area */}
         <main className="flex-1 px-4 pb-8">
-          <div className="max-w-2xl mx-auto">
 
-            {/* Step header */}
-            <div className={`mb-5 animate-fade-in-up text-center`} style={{ animationDelay: '250ms' }}>
-              <h2 className="text-xl font-bold text-white mb-0.5 font-display">
-                {STEP_TITLES[step - 1].title}
-              </h2>
-              <p className="text-sm text-[#64748b]">
-                {STEP_TITLES[step - 1].sub}
-              </p>
+          {/* ═══════════════════════════════════════════════
+              BUILDER PHASE — Steps 1 & 2
+              Two-column: card grid (65%) + sticky sidebar (35%)
+          ═══════════════════════════════════════════════ */}
+          {isBuilderPhase && (
+            <div className="max-w-5xl mx-auto">
+              <div className="builder-layout">
+
+                {/* Card grid column (65%) */}
+                <div className="builder-content card p-6 sm:p-8 animate-scale-in">
+                  <AnimatePresence mode="wait" custom={direction.current}>
+                    {step === 1 && (
+                      <motion.div
+                        key="step1"
+                        custom={direction.current}
+                        variants={getVariants(direction.current)}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                      >
+                        <PageSelector
+                          selected={selectedPages}
+                          onChange={setSelectedPages}
+                          siteType={siteType}
+                          onSiteTypeChange={setSiteType}
+                          livePrice={livePrice}
+                        />
+                      </motion.div>
+                    )}
+
+                    {step === 2 && (
+                      <motion.div
+                        key="step2"
+                        custom={direction.current}
+                        variants={getVariants(direction.current)}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                      >
+                        <FeatureSelector
+                          selected={selectedFeatures}
+                          onChange={setSelectedFeatures}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Back navigation (mobile — sidebar has Continue) */}
+                  <div className="flex items-center justify-between mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)] sm:hidden">
+                    <button
+                      onClick={handlePrev}
+                      disabled={step === 1}
+                      className="btn-secondary"
+                    >
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Back
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Desktop: back button only (Continue is in sidebar) */}
+                  <div className="hidden sm:flex items-center mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)]">
+                    <button
+                      onClick={handlePrev}
+                      disabled={step === 1}
+                      className="btn-secondary"
+                    >
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Back
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sticky sidebar (35%) — desktop only */}
+                <BuilderSidebar
+                  step={step}
+                  selectedPages={selectedPageItems}
+                  selectedFeatures={selectedFeatureItems}
+                  livePrice={livePrice}
+                  featureTotal={featureTotal}
+                  onContinue={handleNext}
+                  canContinue={canProceed()}
+                />
+              </div>
             </div>
+          )}
 
-            {/* Step content card */}
-            <div className="card p-6 sm:p-8 animate-scale-in" style={{ animationDelay: '280ms' }}>
-
-              <AnimatePresence mode="wait" custom={direction.current}>
-                {step === 1 && (
+          {/* ═══════════════════════════════════════════════
+              REVIEW PHASE — Step 3
+              Full-width centered quote review
+          ═══════════════════════════════════════════════ */}
+          {step === 3 && (
+            <div className="max-w-2xl mx-auto">
+              <div className="card p-6 sm:p-8 animate-scale-in">
+                <AnimatePresence mode="wait" custom={direction.current}>
                   <motion.div
-                    key="step1"
+                    key="step3"
                     custom={direction.current}
                     variants={getVariants(direction.current)}
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                    transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                   >
-                    {/* Live running price banner */}
-                    <div className="flex items-center justify-between mb-5 px-1">
-                      <div className="text-xs text-[#64748b]">
-                        Running total
-                      </div>
-                      <div className="live-price-counter flex items-center gap-1.5 bg-[rgba(129,140,248,0.08)] border border-[rgba(129,140,248,0.15)] rounded-full px-3.5 py-1.5">
-                        <span className="text-xs text-[#818cf8] font-medium">£</span>
-                        <span
-                          className="text-sm font-bold text-white count-up font-display"
-                          key={livePrice}
-                        >
-                          {livePrice}
-                        </span>
-                        <span className="text-xs text-[#64748b]">GBP</span>
-                      </div>
-                    </div>
-                    <PageSelector
-                      selected={selectedPages}
-                      onChange={setSelectedPages}
-                      siteType={siteType}
-                      onSiteTypeChange={setSiteType}
-                      livePrice={livePrice}
-                    />
-                  </motion.div>
-                )}
-
-                {step === 2 && (
-                  <motion.div
-                    key="step2"
-                    custom={direction.current}
-                    variants={getVariants(direction.current)}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  >
-                    <FeatureSelector selected={selectedFeatures} onChange={setSelectedFeatures} />
-                  </motion.div>
-                )}
-
-                {(step === 3 || step === 4) && (
-                  <motion.div
-                    key={`step${step}`}
-                    custom={direction.current}
-                    variants={getVariants(direction.current)}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  >
-                    <QuoteSummary
+                    <QuoteReviewPanel
                       selectedPageIds={selectedPages}
                       selectedFeatureIds={selectedFeatures}
                       siteType={siteType}
                       couponDiscount={couponStatus === 'valid' ? couponDiscount : null}
-                      couponCode={couponStatus === 'valid' ? couponCode : null}
+                      couponCode={couponStatus === 'valid' ? couponCode : ''}
                       originalTotal={quote.total}
+                      onEditPages={() => { goPrev(); setStep(1); }}
+                      onEditFeatures={() => { goPrev(); setStep(2); }}
+                      onProceed={() => setShowFormPanel(true)}
                     />
                   </motion.div>
-                )}
-              </AnimatePresence>
+                </AnimatePresence>
 
-              {step === 4 && !isSuccess && (
-                <div className="mt-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                  <InquiryForm
-                    name={clientName}
-                    email={clientEmail}
-                    couponCode={couponCode}
-                    couponStatus={couponStatus}
-                    couponDiscount={couponDiscount}
-                    onNameChange={setClientName}
-                    onEmailChange={setClientEmail}
-                    onCouponChange={setCouponCode}
-                    onCouponValidate={handleCouponBlur}
-                    onSubmit={handleSubmit}
-                    isSubmitting={isSubmitting}
-                    isSuccess={isSuccess}
-                    error={error}
-                  />
-                </div>
-              )}
-
-              {step === 4 && isSuccess && (
-                <div className="animate-scale-in">
-                  <InquiryForm
-                    name={clientName}
-                    email={clientEmail}
-                    couponCode={couponCode}
-                    couponStatus={couponStatus}
-                    couponDiscount={couponDiscount}
-                    onNameChange={setClientName}
-                    onEmailChange={setClientEmail}
-                    onCouponChange={setCouponCode}
-                    onCouponValidate={handleCouponBlur}
-                    onSubmit={handleSubmit}
-                    isSubmitting={isSubmitting}
-                    isSuccess={isSuccess}
-                    error={error}
-                  />
-                </div>
-              )}
-
-              {/* Navigation */}
-              {step < 4 && (
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)]">
-                  <button
-                    onClick={handlePrev}
-                    disabled={step === 1}
-                    className="btn-secondary"
-                  >
+                {/* Back nav */}
+                <div className="flex items-center mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)]">
+                  <button onClick={handlePrev} className="btn-secondary">
                     <span className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -318,39 +336,10 @@ export default function Home() {
                       Back
                     </span>
                   </button>
-
-                  {step < 3 && (
-                    <button
-                      onClick={handleNext}
-                      disabled={!canProceed()}
-                      className="btn-primary"
-                    >
-                      <span className="flex items-center gap-2">
-                        Continue
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </span>
-                    </button>
-                  )}
-
-                  {step === 3 && (
-                    <button
-                      onClick={handleNext}
-                      className="btn-primary"
-                    >
-                      <span className="flex items-center gap-2">
-                        Proceed to Submit
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                      </span>
-                    </button>
-                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </main>
 
         {/* Footer */}
@@ -360,6 +349,37 @@ export default function Home() {
           </p>
         </footer>
       </div>
+
+      {/* Mobile sticky bottom bar — shown on builder phase */}
+      {isBuilderPhase && (
+        <SelectionBottomBar
+          selectedPages={selectedPageItems}
+          selectedFeatures={selectedFeatureItems}
+          livePrice={livePrice}
+          featureTotal={featureTotal}
+          onContinue={handleNext}
+          canContinue={canProceed()}
+        />
+      )}
+
+      {/* Form panel overlay (step 3 → "Proceed to Submit") */}
+      <FormPanel
+        open={showFormPanel}
+        onClose={() => setShowFormPanel(false)}
+        name={clientName}
+        email={clientEmail}
+        couponCode={couponCode}
+        couponStatus={couponStatus}
+        couponDiscount={couponDiscount}
+        onNameChange={setClientName}
+        onEmailChange={setClientEmail}
+        onCouponChange={setCouponCode}
+        onCouponValidate={handleCouponBlur}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        isSuccess={isSuccess}
+        error={error}
+      />
     </div>
   );
 }

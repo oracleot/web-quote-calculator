@@ -807,3 +807,92 @@ body {
 .light .page-category[open] summary {
   border-bottom-color: rgba(15, 15, 15, 0.08);
 }
+
+/* ══════════════════════════════════════════════════
+   BUILDER LAYOUT — two-column: content (65%) + sidebar (35%)
+   Desktop only (≥640px). Mobile is full-width.
+══════════════════════════════════════════════════ */
+
+.builder-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* Card grid column — 65% */
+.builder-content {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+/* Sticky sidebar — 35% */
+.builder-sidebar {
+  width: 35%;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+/* Mobile sticky bottom bar */
+.builder-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Form panel (desktop: right panel, mobile: bottom sheet) */
+.form-panel {
+  background: var(--bg-elevated);
+  border-left: 1px solid var(--border);
+}
+
+/* Light theme variants */
+.light .builder-sidebar {
+  background: var(--bg-card);
+  border-color: var(--border);
+  box-shadow: 0 2px 8px rgba(15, 10, 5, 0.04);
+}
+
+.light .builder-bottom-bar {
+  background: var(--bg-elevated);
+  border-top-color: rgba(15, 15, 15, 0.08);
+}
+
+.light .form-panel {
+  background: var(--bg-elevated);
+  border-left-color: rgba(15, 15, 15, 0.08);
+}
+
+/* Mobile bottom bar spacing — add padding to page bottom on mobile builder */
+@media (max-width: 639px) {
+  .builder-layout-wrapper {
+    padding-bottom: 72px;
+  }
+}
+
+/* Remove gap between columns on mobile (stack) */
+@media (max-width: 639px) {
+  .builder-layout {
+    flex-direction: column;
+  }
+
+  .builder-sidebar {
+    display: none !important;
+  }
+}
