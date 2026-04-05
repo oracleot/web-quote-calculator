@@ -32,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${instrumentSerif.variable} ${inter.variable}`}>
-      <body>
+      <body className={inter.className}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

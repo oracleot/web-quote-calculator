@@ -1,25 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { applyCoupon } from '@/lib/coupons';
-
-// Rate limiting
-const rateLimits = new Map<string, { count: number; resetAt: number }>();
-
-function rateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now();
-  const entry = rateLimits.get(key);
-  if (!entry || now > entry.resetAt) {
-    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (entry.count >= limit) return false;
-  entry.count++;
-  return true;
-}
+import { rateLimitApplyCoupon } from '@/lib/ratelimit';
 
 export async function POST(request: NextRequest) {
   // Rate limit: 20 requests per minute per IP
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  if (!rateLimit(`apply-coupon:${ip}`, 20, 60000)) {
+  const { allowed } = await rateLimitApplyCoupon(request);
+  if (!allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
