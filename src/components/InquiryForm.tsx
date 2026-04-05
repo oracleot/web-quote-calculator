@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface InquiryFormProps {
   name: string;
   email: string;
@@ -14,6 +16,51 @@ interface InquiryFormProps {
   isSubmitting: boolean;
   isSuccess: boolean;
   error: string | null;
+}
+
+function FloatingInput({
+  id,
+  label,
+  type = 'text',
+  value,
+  placeholder,
+  onChange,
+  autoComplete,
+  fontMono = false,
+}: {
+  id: string;
+  label: string;
+  type?: string;
+  value: string;
+  placeholder?: string;
+  onChange: (v: string) => void;
+  autoComplete?: string;
+  fontMono?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  const isFloated = focused || value.length > 0;
+
+  return (
+    <div className="floating-form-group">
+      <label
+        htmlFor={id}
+        className={`floating-label ${isFloated ? 'float-up' : ''}`}
+      >
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        className={`form-input ${fontMono ? 'font-mono tracking-wider' : ''}`}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+      />
+    </div>
+  );
 }
 
 export default function InquiryForm({
@@ -67,38 +114,29 @@ export default function InquiryForm({
       </div>
 
       <div className="space-y-3">
-        <div className="space-y-1.5">
-          <label htmlFor="name" className="block text-sm font-medium text-[#94a3b8] pl-1">
-            Your Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => onNameChange(e.target.value)}
-            placeholder="Ada Lovelace"
-            className="form-input"
-            autoComplete="name"
-          />
-        </div>
+        <FloatingInput
+          id="name"
+          label="Your Name"
+          value={name}
+          onChange={onNameChange}
+          autoComplete="name"
+        />
 
-        <div className="space-y-1.5">
-          <label htmlFor="email" className="block text-sm font-medium text-[#94a3b8] pl-1">
-            Email Address
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => onEmailChange(e.target.value)}
-            placeholder="ada@example.com"
-            className="form-input"
-            autoComplete="email"
-          />
-        </div>
+        <FloatingInput
+          id="email"
+          label="Email Address"
+          type="email"
+          value={email}
+          onChange={onEmailChange}
+          autoComplete="email"
+        />
 
+        {/* Coupon field */}
         <div className="space-y-1.5">
-          <label htmlFor="coupon" className="block text-sm font-medium text-[#94a3b8] pl-1">
+          <label
+            htmlFor="coupon"
+            className={`floating-label ${couponCode.length > 0 ? 'float-up' : ''}`}
+          >
             Coupon Code <span className="text-[#64748b]">(optional)</span>
           </label>
           <div className="flex gap-2">
@@ -107,14 +145,13 @@ export default function InquiryForm({
               type="text"
               value={couponCode}
               onChange={(e) => onCouponChange(e.target.value.toUpperCase())}
-              placeholder="e.g. DAMI20"
               className="form-input font-mono tracking-wider flex-1"
               autoComplete="off"
             />
             <button
               type="button"
               onClick={onCouponValidate}
-              className="px-4 py-2 rounded-lg bg-[rgba(129,140,248,0.1)] border border-[rgba(129,140,248,0.2)] text-[#818cf8] text-sm font-medium hover:bg-[rgba(129,140,248,0.15)] transition-colors"
+              className="px-4 py-2 rounded-lg bg-[rgba(129,140,248,0.1)] border border-[rgba(129,140,248,0.2)] text-[#818cf8] text-sm font-medium hover:bg-[rgba(129,140,248,0.15)] transition-colors whitespace-nowrap"
             >
               Validate
             </button>

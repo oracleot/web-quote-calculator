@@ -43,6 +43,11 @@ body {
   min-height: 100vh;
 }
 
+/* Display font — Instrument Serif for headlines and hero prices */
+.font-display {
+  font-family: var(--font-display), 'Instrument Serif', Georgia, serif;
+}
+
 /* Animated background grid */
 .bg-grid {
   background-image:
@@ -82,6 +87,7 @@ body {
 .select-card {
   background: var(--bg-card);
   border: 1.5px solid var(--border);
+  border-left: 3px solid transparent;
   border-radius: 12px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -100,6 +106,7 @@ body {
 
 .select-card:hover {
   border-color: rgba(255,255,255,0.15);
+  border-left-color: transparent;
   background: var(--bg-card-hover);
 }
 
@@ -108,9 +115,11 @@ body {
 }
 
 .select-card.selected {
-  border-color: var(--accent);
-  background: rgba(129, 140, 248, 0.08);
-  box-shadow: 0 0 0 1px var(--accent), 0 4px 20px var(--accent-glow);
+  border-left-color: var(--accent);
+  border-top-color: rgba(129,140,248,0.2);
+  border-right-color: rgba(129,140,248,0.2);
+  border-bottom-color: rgba(129,140,248,0.2);
+  background: rgba(129, 140, 248, 0.06);
 }
 
 .select-card.selected::before {
@@ -211,12 +220,44 @@ body {
   cursor: not-allowed;
 }
 
-/* Form inputs */
+/* Form inputs with floating labels */
+.floating-form-group {
+  position: relative;
+}
+
+.floating-label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  padding: 0 4px;
+}
+
+.floating-label.float-up {
+  top: 0;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.floating-label.float-up-light {
+  top: 0;
+  font-size: 11px;
+  color: var(--accent);
+  background: white;
+}
+
 .form-input {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 16px;
+  padding-top: 20px;
   color: var(--text-primary);
   font-size: 15px;
   width: 100%;
@@ -225,7 +266,7 @@ body {
 }
 
 .form-input::placeholder {
-  color: var(--text-muted);
+  color: transparent;
 }
 
 .form-input:focus {
@@ -384,6 +425,41 @@ body {
   border-radius: 12px;
 }
 
+/* Hero price — big, glowing, gradient */
+.price-hero {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 60%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(129, 140, 248, 0.4)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.15));
+  font-family: var(--font-display), 'Instrument Serif', Georgia, serif;
+}
+
+@media (min-width: 640px) {
+  .price-hero {
+    font-size: 4.5rem;
+  }
+}
+
+.price-hero-currency {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  -webkit-text-fill-color: var(--text-muted);
+}
+
+.price-hero-discounted {
+  background: linear-gradient(135deg, #34d399 0%, #6ee7b7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 16px rgba(52, 211, 153, 0.35));
+}
+
 /* Success checkmark */
 .success-ring {
   background: var(--success-bg);
@@ -471,6 +547,50 @@ body {
   color: var(--text-primary);
 }
 
+/* Mobile category group */
+.page-category {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.page-category summary {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--bg-elevated);
+  transition: background 0.2s;
+}
+
+.page-category summary::-webkit-details-marker {
+  display: none;
+}
+
+.page-category summary:hover {
+  background: var(--bg-card-hover);
+}
+
+.page-category[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+/* Live price counter */
+.live-price-counter {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 /* ==================== LIGHT THEME ==================== */
 /* Editorial warmth — cream tones, amber accents, refined & premium */
 .light {
@@ -521,18 +641,22 @@ body {
 /* Light theme selection card */
 .light .select-card {
   border-color: var(--border);
+  border-left-color: transparent;
   background: var(--bg-card);
 }
 
 .light .select-card:hover {
   border-color: rgba(15, 15, 15, 0.14);
+  border-left-color: transparent;
   background: var(--bg-card-hover);
 }
 
 .light .select-card.selected {
-  border-color: var(--accent);
-  background: rgba(180, 100, 50, 0.06);
-  box-shadow: 0 0 0 1px var(--accent), 0 4px 16px rgba(180, 100, 50, 0.1);
+  border-left-color: var(--accent);
+  border-top-color: rgba(180,100,50,0.3);
+  border-right-color: rgba(180,100,50,0.3);
+  border-bottom-color: rgba(180,100,50,0.3);
+  background: rgba(180, 100, 50, 0.05);
 }
 
 /* Light theme primary button — warm terracotta */
@@ -567,12 +691,17 @@ body {
 }
 
 .light .form-input::placeholder {
-  color: var(--text-muted);
+  color: transparent;
 }
 
 .light .form-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(180, 100, 50, 0.12);
+}
+
+/* Light theme floating label */
+.light .floating-label.float-up {
+  background: white;
 }
 
 /* Light theme step indicator */
@@ -659,4 +788,23 @@ body {
   background: var(--bg-elevated);
   border-color: rgba(15, 15, 15, 0.08);
   color: var(--text-secondary);
+}
+
+/* Light theme page category */
+.light .page-category {
+  border-color: rgba(15, 15, 15, 0.08);
+  background: var(--bg-card);
+}
+
+.light .page-category summary {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.light .page-category summary:hover {
+  background: var(--bg-card-hover);
+}
+
+.light .page-category[open] summary {
+  border-bottom-color: rgba(15, 15, 15, 0.08);
 }

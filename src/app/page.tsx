@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import StepIndicator from '@/components/StepIndicator';
 import PageSelector from '@/components/PageSelector';
 import FeatureSelector from '@/components/FeatureSelector';
 import QuoteSummary from '@/components/QuoteSummary';
 import InquiryForm from '@/components/InquiryForm';
 import { calculateQuote } from '@/lib/pricing';
+import { useDirection } from '@/hooks/useDirection';
 
 const TOTAL_STEPS = 4;
 
@@ -33,6 +35,14 @@ export default function Home() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  const { direction, goNext, goPrev } = useDirection();
+
+  // Live price on Step 1 — base price + any extra pages
+  const livePrice = useMemo(() => {
+    const quote = calculateQuote(selectedPages, []);
+    return quote.total;
+  }, [selectedPages]);
 
   useEffect(() => {
     setMounted(true);
@@ -79,7 +89,6 @@ export default function Home() {
     setError(null);
 
     try {
-      // Apply coupon if valid
       if (couponStatus === 'valid' && couponCode && clientEmail) {
         await fetch('/api/apply-coupon', {
           method: 'POST',
@@ -114,6 +123,23 @@ export default function Home() {
     }
   };
 
+  // Direction-aware animation variants
+  const getVariants = (dir: 1 | -1) => ({
+    enter: { x: dir * 40, opacity: 0 },
+    center: { x: 0, opacity: 1 },
+    exit: { x: dir * -40, opacity: 0 },
+  });
+
+  const handleNext = () => {
+    goNext();
+    setStep((s) => s + 1);
+  };
+
+  const handlePrev = () => {
+    goPrev();
+    setStep((s) => Math.max(1, s - 1));
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Ambient background */}
@@ -133,7 +159,8 @@ export default function Home() {
             </svg>
             Instant estimate · No commitment
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2 animate-fade-in-up">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2 animate-fade-in-up font-display"
+              style={{ animationDelay: '50ms' }}>
             Website Quote Calculator
           </h1>
           <p className="text-[#94a3b8] text-base max-w-md mx-auto animate-fade-in-up" style={{ animationDelay: '100ms' }}>
@@ -152,7 +179,7 @@ export default function Home() {
 
             {/* Step header */}
             <div className={`mb-5 animate-fade-in-up text-center`} style={{ animationDelay: '250ms' }}>
-              <h2 className="text-xl font-bold text-white mb-0.5">
+              <h2 className="text-xl font-bold text-white mb-0.5 font-display">
                 {STEP_TITLES[step - 1].title}
               </h2>
               <p className="text-sm text-[#64748b]">
@@ -163,30 +190,78 @@ export default function Home() {
             {/* Step content card */}
             <div className="card p-6 sm:p-8 animate-scale-in" style={{ animationDelay: '280ms' }}>
 
-              {step === 1 && (
-                <div className="animate-slide-in-right">
-                  <PageSelector selected={selectedPages} onChange={setSelectedPages} siteType={siteType} onSiteTypeChange={setSiteType} />
-                </div>
-              )}
+              <AnimatePresence mode="wait" custom={direction.current}>
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    custom={direction.current}
+                    variants={getVariants(direction.current)}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    {/* Live running price banner */}
+                    <div className="flex items-center justify-between mb-5 px-1">
+                      <div className="text-xs text-[#64748b]">
+                        Running total
+                      </div>
+                      <div className="live-price-counter flex items-center gap-1.5 bg-[rgba(129,140,248,0.08)] border border-[rgba(129,140,248,0.15)] rounded-full px-3.5 py-1.5">
+                        <span className="text-xs text-[#818cf8] font-medium">£</span>
+                        <span
+                          className="text-sm font-bold text-white count-up font-display"
+                          key={livePrice}
+                        >
+                          {livePrice}
+                        </span>
+                        <span className="text-xs text-[#64748b]">GBP</span>
+                      </div>
+                    </div>
+                    <PageSelector
+                      selected={selectedPages}
+                      onChange={setSelectedPages}
+                      siteType={siteType}
+                      onSiteTypeChange={setSiteType}
+                      livePrice={livePrice}
+                    />
+                  </motion.div>
+                )}
 
-              {step === 2 && (
-                <div className="animate-slide-in-right">
-                  <FeatureSelector selected={selectedFeatures} onChange={setSelectedFeatures} />
-                </div>
-              )}
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    custom={direction.current}
+                    variants={getVariants(direction.current)}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <FeatureSelector selected={selectedFeatures} onChange={setSelectedFeatures} />
+                  </motion.div>
+                )}
 
-              {(step === 3 || step === 4) && (
-                <div className="animate-scale-in">
-                  <QuoteSummary
-                    selectedPageIds={selectedPages}
-                    selectedFeatureIds={selectedFeatures}
-                    siteType={siteType}
-                    couponDiscount={couponStatus === 'valid' ? couponDiscount : null}
-                    couponCode={couponStatus === 'valid' ? couponCode : null}
-                    originalTotal={quote.total}
-                  />
-                </div>
-              )}
+                {(step === 3 || step === 4) && (
+                  <motion.div
+                    key={`step${step}`}
+                    custom={direction.current}
+                    variants={getVariants(direction.current)}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <QuoteSummary
+                      selectedPageIds={selectedPages}
+                      selectedFeatureIds={selectedFeatures}
+                      siteType={siteType}
+                      couponDiscount={couponStatus === 'valid' ? couponDiscount : null}
+                      couponCode={couponStatus === 'valid' ? couponCode : null}
+                      originalTotal={quote.total}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {step === 4 && !isSuccess && (
                 <div className="mt-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
@@ -232,7 +307,7 @@ export default function Home() {
               {step < 4 && (
                 <div className="flex items-center justify-between mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)]">
                   <button
-                    onClick={() => setStep((s) => Math.max(1, s - 1))}
+                    onClick={handlePrev}
                     disabled={step === 1}
                     className="btn-secondary"
                   >
@@ -246,7 +321,7 @@ export default function Home() {
 
                   {step < 3 && (
                     <button
-                      onClick={() => setStep((s) => s + 1)}
+                      onClick={handleNext}
                       disabled={!canProceed()}
                       className="btn-primary"
                     >
@@ -261,7 +336,7 @@ export default function Home() {
 
                   {step === 3 && (
                     <button
-                      onClick={() => setStep(4)}
+                      onClick={handleNext}
                       className="btn-primary"
                     >
                       <span className="flex items-center gap-2">
