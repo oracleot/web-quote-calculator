@@ -78,6 +78,8 @@ export default function InquiryForm({
   isSuccess,
   error,
 }: InquiryFormProps) {
+  const [couponFocused, setCouponFocused] = useState(false);
+
   if (isSuccess) {
     return (
       <div className="text-center py-10 space-y-5 animate-scale-in">
@@ -133,28 +135,32 @@ export default function InquiryForm({
 
         {/* Coupon field */}
         <div className="space-y-1.5">
-          <label
-            htmlFor="coupon"
-            className={`floating-label ${couponCode.length > 0 ? 'float-up' : ''}`}
-          >
-            Coupon Code <span className="text-[#64748b]">(optional)</span>
-          </label>
-          <div className="flex gap-2">
-            <input
-              id="coupon"
-              type="text"
-              value={couponCode}
-              onChange={(e) => onCouponChange(e.target.value.toUpperCase())}
-              className="form-input font-mono tracking-wider flex-1"
-              autoComplete="off"
-            />
-            <button
-              type="button"
-              onClick={onCouponValidate}
-              className="px-4 py-2 rounded-lg bg-[rgba(129,140,248,0.1)] border border-[rgba(129,140,248,0.2)] text-[#818cf8] text-sm font-medium hover:bg-[rgba(129,140,248,0.15)] transition-colors whitespace-nowrap"
+          <div className="floating-form-group">
+            <label
+              htmlFor="coupon"
+              className={`floating-label ${(couponFocused || couponCode.length > 0) ? 'float-up' : ''}`}
             >
-              Validate
-            </button>
+              Coupon Code <span className="text-[#64748b]">(optional)</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="coupon"
+                type="text"
+                value={couponCode}
+                onChange={(e) => onCouponChange(e.target.value.toUpperCase())}
+                onFocus={() => setCouponFocused(true)}
+                onBlur={() => setCouponFocused(false)}
+                className="form-input font-mono tracking-wider flex-1"
+                autoComplete="off"
+              />
+              <button
+                type="button"
+                onClick={onCouponValidate}
+                className="px-4 py-2 rounded-lg bg-[rgba(129,140,248,0.1)] border border-[rgba(129,140,248,0.2)] text-[#818cf8] text-sm font-medium hover:bg-[rgba(129,140,248,0.15)] transition-colors whitespace-nowrap"
+              >
+                Validate
+              </button>
+            </div>
           </div>
         </div>
 

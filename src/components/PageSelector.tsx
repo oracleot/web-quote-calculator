@@ -131,7 +131,7 @@ function PageCard({
   );
 }
 
-export default function PageSelector({ selected, onChange, siteType, onSiteTypeChange }: PageSelectorProps) {
+export default function PageSelector({ selected, onChange, siteType, onSiteTypeChange, livePrice }: PageSelectorProps) {
   const isMobile = useIsMobile();
   const isOnePage = siteType === 'one-page';
 
@@ -180,7 +180,7 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
             Multi-page
           </button>
         </div>
-        <span className="ml-auto text-xs text-[#818cf8] font-medium">£250</span>
+        <span className="ml-auto text-xs text-[#818cf8] font-medium">£{livePrice ?? 250}</span>
       </div>
 
       {/* Pages info */}

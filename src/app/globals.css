@@ -232,7 +232,6 @@ body {
   transform: translateY(-50%);
   font-size: 15px;
   color: var(--text-muted);
-  pointer-events: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent;
   padding: 0 4px;
@@ -265,7 +264,7 @@ body {
   outline: none;
 }
 
-.form-input::placeholder {
+.floating-form-group .form-input::placeholder {
   color: transparent;
 }
 

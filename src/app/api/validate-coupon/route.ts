@@ -1,25 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateCoupon } from '@/lib/coupons';
+import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit';
 
-// Rate limiting
-const rateLimits = new Map<string, { count: number; resetAt: number }>();
+// Upstash Redis client
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-function rateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now();
-  const entry = rateLimits.get(key);
-  if (!entry || now > entry.resetAt) {
-    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (entry.count >= limit) return false;
-  entry.count++;
-  return true;
-}
+// Rate limiter: 20 requests per minute per IP
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, '1 m'),
+  analytics: false,
+});
 
 export async function POST(request: NextRequest) {
   // Rate limit: 20 requests per minute per IP
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  if (!rateLimit(`validate-coupon:${ip}`, 20, 60000)) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+             request.headers.get('x-real-ip') ||
+             'unknown';
+
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
