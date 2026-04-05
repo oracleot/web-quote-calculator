@@ -1,13 +1,37 @@
 'use client';
 
 import { PAGES } from '@/lib/pricing';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface PageSelectorProps {
   selected: string[];
   onChange: (selected: string[]) => void;
   siteType: 'one-page' | 'multi-page';
   onSiteTypeChange: (siteType: 'one-page' | 'multi-page') => void;
+  livePrice?: number;
 }
+
+// Group pages into categories
+const PAGE_GROUPS = [
+  {
+    id: 'core',
+    label: 'Core',
+    description: 'Essential pages',
+    pages: ['home', 'about', 'services', 'contact'],
+  },
+  {
+    id: 'marketing',
+    label: 'Marketing',
+    description: 'Showcase & trust',
+    pages: ['gallery', 'testimonials', 'team', 'faq'],
+  },
+  {
+    id: 'utility',
+    label: 'Utility',
+    description: 'Content & info',
+    pages: ['pricing', 'blog'],
+  },
+];
 
 const PAGE_ICONS: Record<string, React.ReactNode> = {
   home: (
@@ -62,14 +86,59 @@ const PAGE_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-export default function PageSelector({ selected, onChange, siteType, onSiteTypeChange }: PageSelectorProps) {
+function PageCard({
+  pageId,
+  isSelected,
+  onToggle,
+}: {
+  pageId: string;
+  isSelected: boolean;
+  onToggle: (id: string) => void;
+}) {
+  const page = PAGES.find((p) => p.id === pageId);
+  if (!page) return null;
+
+  return (
+    <button
+      onClick={() => onToggle(pageId)}
+      className={`select-card p-4 text-left w-full ${isSelected ? 'selected' : ''}`}
+    >
+      <div className="flex items-start gap-3 relative z-10">
+        <div
+          className={`checkbox flex-shrink-0 ${isSelected ? 'checked' : ''}`}
+        >
+          {isSelected && (
+            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div
+            className={`flex-shrink-0 ${isSelected ? 'text-[#818cf8]' : 'text-[#64748b]'}`}
+            style={{ transition: 'color 0.2s' }}
+          >
+            {PAGE_ICONS[pageId]}
+          </div>
+          <div className="text-left min-w-0">
+            <div className="font-medium text-white text-sm leading-tight">{page.label}</div>
+            <div className="text-xs text-[#64748b] leading-tight mt-0.5">{page.description}</div>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+export default function PageSelector({ selected, onChange, siteType, onSiteTypeChange, livePrice }: PageSelectorProps) {
+  const isMobile = useIsMobile();
   const isOnePage = siteType === 'one-page';
 
   const togglePage = (id: string) => {
     if (selected.includes(id)) {
       onChange(selected.filter((p) => p !== id));
     } else {
-      // In one-page mode, each selected page becomes a section on the landing page
       onChange([...selected, id]);
     }
   };
@@ -77,6 +146,12 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
   const handleSiteTypeChange = (type: 'one-page' | 'multi-page') => {
     onSiteTypeChange(type);
   };
+
+  // Get page objects by group
+  const groupedPages = PAGE_GROUPS.map((group) => ({
+    ...group,
+    pages: group.pages.map((id) => PAGES.find((p) => p.id === id)!),
+  }));
 
   return (
     <div>
@@ -105,7 +180,7 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
             Multi-page
           </button>
         </div>
-        <span className="ml-auto text-xs text-[#818cf8] font-medium">£250</span>
+        <span className="ml-auto text-xs text-[#818cf8] font-medium">£{livePrice ?? 250}</span>
       </div>
 
       {/* Pages info */}
@@ -123,44 +198,72 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 stagger-children">
-        {PAGES.map((page) => {
-          const isSelected = selected.includes(page.id);
-          const isDisabled = false;
+      {/* Desktop: flat grid (rendered only on desktop) */}
+      {!isMobile && (
+        <div className="grid gap-3 sm:grid-cols-2 stagger-children">
+          {PAGES.map((page) => {
+            const isSelected = selected.includes(page.id);
+            return (
+              <PageCard
+                key={page.id}
+                pageId={page.id}
+                isSelected={isSelected}
+                onToggle={togglePage}
+              />
+            );
+          })}
+        </div>
+      )}
 
-          return (
-            <button
-              key={page.id}
-              onClick={() => togglePage(page.id)}
-              disabled={isDisabled}
-              className={`select-card p-4 ${isSelected ? 'selected' : ''} ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-            >
-              <div className="flex items-start gap-3 relative z-10">
-                <div
-                  className={`checkbox flex-shrink-0 ${isSelected ? 'checked' : ''}`}
-                >
-                  {isSelected && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+      {/* Mobile: grouped collapsible categories (rendered only on mobile) */}
+      {isMobile && (
+        <div className="space-y-3">
+          {groupedPages.map((group) => {
+            const selectedInGroup = group.pages.filter((p) => selected.includes(p.id)).length;
+            return (
+              <details key={group.id} className="page-category">
+                <summary>
+                  <span className="flex items-center gap-2">
+                    <span>{group.label}</span>
+                    <span className="text-[10px] text-[#64748b] normal-case font-normal">
+                      {group.description}
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    {selectedInGroup > 0 && (
+                      <span className="bg-[#818cf8] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                        {selectedInGroup}
+                      </span>
+                    )}
+                    <svg
+                      className="w-3.5 h-3.5 text-[#64748b] transition-transform duration-200"
+                      style={{ transform: 'rotate(0deg)' }}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  )}
+                  </span>
+                </summary>
+                <div className="grid gap-2 p-2">
+                  {group.pages.map((page) => {
+                    const isSelected = selected.includes(page.id);
+                    return (
+                      <PageCard
+                        key={page.id}
+                        pageId={page.id}
+                        isSelected={isSelected}
+                        onToggle={togglePage}
+                      />
+                    );
+                  })}
                 </div>
-
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className={`flex-shrink-0 ${isSelected ? 'text-[#818cf8]' : 'text-[#64748b]'}`}
-                       style={{ transition: 'color 0.2s' }}>
-                    {PAGE_ICONS[page.id]}
-                  </div>
-                  <div className="text-left min-w-0">
-                    <div className="font-medium text-white text-sm leading-tight">{page.label}</div>
-                    <div className="text-xs text-[#64748b] leading-tight mt-0.5">{page.description}</div>
-                  </div>
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+              </details>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

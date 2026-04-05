@@ -30,6 +30,31 @@ export default function QuoteSummary({
 
   return (
     <div className="space-y-4">
+      {/* Hero price display */}
+      <div className="text-center py-4 px-2">
+        <p className="text-xs text-[#64748b] uppercase tracking-widest font-medium mb-3">
+          Your Estimate
+        </p>
+        <div className="flex items-baseline justify-center gap-2">
+          <span className="price-hero-currency">£</span>
+          {hasCoupon ? (
+            <>
+              <span className="price-hero line-through opacity-50 mr-1">
+                {originalTotal}
+              </span>
+              <span className="price-hero price-hero-discounted">
+                {finalTotal}
+              </span>
+            </>
+          ) : (
+            <span className="price-hero" key={quote.total}>
+              {quote.total}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-[#64748b] mt-2">GBP · estimates exclude VAT</p>
+      </div>
+
       {/* Quote card */}
       <div className="quote-total p-5">
         <div className="flex items-center gap-2 mb-4">
@@ -107,21 +132,21 @@ export default function QuoteSummary({
             </div>
           )}
 
-          {/* Total */}
+          {/* Total — secondary display below the hero */}
           <div className="flex items-center justify-between pt-3 mt-2 border-t border-[rgba(255,255,255,0.08)]">
             <span className="text-[#94a3b8] font-medium">Total Estimate</span>
             <div className="flex items-center gap-2">
               {hasCoupon ? (
                 <>
-                  <span className="text-lg font-extrabold text-[#94a3b8] line-through count-up">
+                  <span className="text-sm font-extrabold text-[#94a3b8] line-through count-up">
                     £{originalTotal}
                   </span>
-                  <span className="text-2xl font-extrabold text-[#34d399] count-up">
+                  <span className="text-lg font-extrabold text-[#34d399] count-up">
                     £{finalTotal}
                   </span>
                 </>
               ) : (
-                <span className="text-2xl font-extrabold text-white count-up">£{quote.total}</span>
+                <span className="text-lg font-extrabold text-white count-up">£{quote.total}</span>
               )}
               <div className="text-xs text-[#64748b]">GBP</div>
             </div>
@@ -152,10 +177,7 @@ export default function QuoteSummary({
           </p>
           <div className="flex flex-wrap gap-2">
             {selectedPages.map((p) => (
-              <span
-                key={p.id}
-                className="chip"
-              >
+              <span key={p.id} className="chip">
                 <svg className="w-3 h-3 mr-1.5 text-[#818cf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>

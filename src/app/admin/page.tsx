@@ -53,7 +53,7 @@ export default function AdminPage() {
 
   // Check sessionStorage on mount
   useEffect(() => {
-    if (sessionStorage.getItem('admin_authed') === 'true') {
+    if (sessionStorage.getItem('admin_session_token')) {
       setAuthed(true);
     }
   }, []);
@@ -63,7 +63,7 @@ export default function AdminPage() {
     setError('');
     try {
       const res = await fetch('/api/admin/coupons', {
-        headers: { 'x-admin-password': sessionStorage.getItem('admin_password') || '' },
+        headers: { 'x-session-token': sessionStorage.getItem('admin_session_token') || '' },
       });
       if (!res.ok) throw new Error('Failed to load coupons');
       const data = await res.json();
@@ -88,9 +88,9 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 'x-admin-password': password },
       });
-      if (res.ok) {
-        sessionStorage.setItem('admin_authed', 'true');
-        sessionStorage.setItem('admin_password', password);
+      const data = await res.json();
+      if (res.ok && data.token) {
+        sessionStorage.setItem('admin_session_token', data.token);
         setAuthed(true);
       } else {
         setAuthError('Incorrect password');
@@ -120,11 +120,11 @@ export default function AdminPage() {
 
     setCreateLoading(true);
     try {
-      const adminPassword = sessionStorage.getItem('admin_password') || '';
+      const sessionToken = sessionStorage.getItem('admin_session_token') || '';
       const res = await fetch('/api/admin/coupons', {
         method: 'POST',
         headers: {
-          'x-admin-password': adminPassword,
+          'x-session-token': sessionToken,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ clientEmail: email, discountPercent: discountNum }),
@@ -151,11 +151,11 @@ export default function AdminPage() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const adminPassword = sessionStorage.getItem('admin_password') || '';
+      const sessionToken = sessionStorage.getItem('admin_session_token') || '';
       const res = await fetch('/api/admin/coupons', {
         method: 'DELETE',
         headers: {
-          'x-admin-password': adminPassword,
+          'x-session-token': sessionToken,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ code: deleteTarget.code }),
@@ -236,7 +236,7 @@ export default function AdminPage() {
               Refresh
             </button>
             <button
-              onClick={() => { sessionStorage.removeItem('admin_authed'); sessionStorage.removeItem('admin_password'); setAuthed(false); }}
+              onClick={() => { sessionStorage.removeItem('admin_session_token'); setAuthed(false); }}
               className="btn-secondary flex items-center gap-2 text-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllCoupons, createCoupon, deleteCoupon } from '@/lib/coupons';
+import { validateSession } from '@/lib/auth';
 
 function checkAdminAuth(request: NextRequest): boolean {
   const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+
+  // Support session token (preferred)
+  const token = request.headers.get('x-session-token');
+  if (token) {
+    return validateSession(token, adminPassword);
+  }
+
+  // Fallback to password (deprecated, but needed for backward compat during transition)
   const providedPassword = request.headers.get('x-admin-password');
-  return adminPassword !== undefined && providedPassword === adminPassword;
+  return providedPassword === adminPassword;
 }
 
 export async function GET(request: NextRequest) {
