@@ -17,7 +17,6 @@ interface BuilderPhaseProps {
   setSiteType: (v: 'one-page' | 'multi-page') => void;
   livePrice: number;
   featureTotal: number;
-  migrationFee: number;
   selectedPageItems: SelectionItem[];
   selectedFeatureItems: SelectionItem[];
   onPrev: () => void;
@@ -40,7 +39,7 @@ const BACK_ICON = (
 export default function BuilderPhase({
   step, direction, selectedPages, setSelectedPages,
   selectedFeatures, setSelectedFeatures, siteType, setSiteType,
-  livePrice, featureTotal, migrationFee,
+  livePrice, featureTotal,
   selectedPageItems, selectedFeatureItems,
   onPrev, onNext, canContinue,
 }: BuilderPhaseProps) {
@@ -79,7 +78,7 @@ export default function BuilderPhase({
         </div>
 
         <BuilderSidebar step={step} selectedPages={selectedPageItems} selectedFeatures={selectedFeatureItems}
-          livePrice={livePrice} featureTotal={featureTotal} migrationFee={migrationFee}
+          livePrice={livePrice} featureTotal={featureTotal}
           onContinue={onNext} canContinue={canContinue} />
       </div>
     </div>

@@ -9,7 +9,6 @@ interface SelectionBottomBarProps {
   selectedFeatures: SelectionItem[];
   livePrice: number;
   featureTotal: number;
-  migrationFee?: number;
   onContinue: () => void;
   canContinue: boolean;
 }
@@ -19,7 +18,6 @@ export default function SelectionBottomBar({
   selectedFeatures,
   livePrice,
   featureTotal,
-  migrationFee = 0,
   onContinue,
   canContinue,
 }: SelectionBottomBarProps) {

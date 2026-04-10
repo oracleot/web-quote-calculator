@@ -9,7 +9,6 @@ interface BuilderSidebarProps {
   selectedFeatures: SelectionItem[];
   livePrice: number;
   featureTotal: number;
-  migrationFee?: number;
   onContinue: () => void;
   canContinue: boolean;
 }
@@ -20,12 +19,12 @@ export default function BuilderSidebar({
   selectedFeatures,
   livePrice,
   featureTotal,
-  migrationFee = 0,
   onContinue,
   canContinue,
 }: BuilderSidebarProps) {
   const allItems = [...selectedPages, ...selectedFeatures];
-  const total = livePrice + featureTotal + migrationFee;
+  // livePrice already includes the migration fee — do not add migrationFee again
+  const total = livePrice + featureTotal;
 
   return (
     <aside className="builder-sidebar hidden sm:flex flex-col">

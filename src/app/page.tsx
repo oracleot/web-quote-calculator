@@ -43,10 +43,7 @@ export default function Home() {
   const [showFormPanel, setShowFormPanel] = useState(false);
   const [selectedMaintenancePlan, setSelectedMaintenancePlan] = useState<'none' | 'basic' | 'standard'>('none');
 
-  // When migration is toggled on, start with no pages pre-selected
-  useEffect(() => {
-    if (isMigration) setSelectedPages([]);
-  }, [isMigration]);
+  // Migration pages are reset synchronously in the MigrationToggle onChange handler
 
   const { direction, goNext, goPrev } = useDirection();
 
@@ -56,11 +53,12 @@ export default function Home() {
     () => calculateQuote(selectedPages, selectedFeatures, { isMigration }),
     [selectedPages, selectedFeatures, isMigration]
   );
-  const migrationFee = isMigration ? 100 : 0;
+
 
   const selectedPageItems = useSelectionList(selectedPages, EMPTY_IDS);
   const selectedFeatureItems = useSelectionList(EMPTY_IDS, selectedFeatures);
-  const canProceed = () => step !== 1 || selectedPages.length > 0;
+  // Migration allows 0 pages on step 1; new builds require at least one page
+  const canProceed = () => step !== 1 || isMigration || selectedPages.length > 0;
 
   const handleCouponBlur = async () => {
     if (!couponCode.trim() || !clientEmail.trim()) { setCouponStatus('idle'); setCouponDiscount(null); return; }
@@ -126,7 +124,7 @@ export default function Home() {
         {step === 1 && (
           <div className="px-4 mb-4 animate-fade-in">
             <div className="max-w-5xl mx-auto">
-              <MigrationToggle isMigration={isMigration} onChange={setIsMigration} />
+              <MigrationToggle isMigration={isMigration} onChange={(v) => { setIsMigration(v); setSelectedPages(v ? [] : ['home']); }} />
             </div>
           </div>
         )}
@@ -146,7 +144,7 @@ export default function Home() {
               selectedPages={selectedPages} setSelectedPages={setSelectedPages}
               selectedFeatures={selectedFeatures} setSelectedFeatures={setSelectedFeatures}
               siteType={siteType} setSiteType={setSiteType}
-              livePrice={livePrice} featureTotal={featureTotal} migrationFee={migrationFee}
+              livePrice={livePrice} featureTotal={featureTotal}
               selectedPageItems={selectedPageItems} selectedFeatureItems={selectedFeatureItems}
               onPrev={handlePrev} onNext={handleNext} canContinue={canProceed()} />
           )}
@@ -188,7 +186,7 @@ export default function Home() {
 
       {isBuilderPhase && (
         <SelectionBottomBar selectedPages={selectedPageItems} selectedFeatures={selectedFeatureItems}
-          livePrice={livePrice} featureTotal={featureTotal} migrationFee={migrationFee}
+          livePrice={livePrice} featureTotal={featureTotal}
           onContinue={handleNext} canContinue={canProceed()} />
       )}
 
