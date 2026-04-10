@@ -89,12 +89,7 @@ export default function BuilderSidebar({
             <span className="text-[var(--text-secondary)]">£{livePrice}</span>
           </div>
         )}
-        {migrationFee > 0 && (
-          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-            <span>Migration</span>
-            <span className="text-[#818cf8]">+£{migrationFee}</span>
-          </div>
-        )}
+        {/* Migration fee is already included in livePrice when isMigration=true — no double-counting */}
 
         {/* Running total */}
         <div className="flex items-baseline justify-between">

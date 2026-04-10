@@ -24,7 +24,8 @@ export default function SelectionBottomBar({
   canContinue,
 }: SelectionBottomBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const total = livePrice + featureTotal + migrationFee;
+  // livePrice already includes migration fee when isMigration=true — no double-counting
+  const total = livePrice + featureTotal;
   const pageCount = selectedPages.length;
   const allItems = [...selectedPages, ...selectedFeatures];
   const triggerRef = useRef<HTMLButtonElement>(null);
