@@ -6,6 +6,7 @@ interface QuoteReviewPanelProps {
   selectedPageIds: string[];
   selectedFeatureIds: string[];
   siteType: 'one-page' | 'multi-page';
+  isMigration: boolean;
   couponDiscount: number | null;
   couponCode: string;
   originalTotal: number;
@@ -18,6 +19,7 @@ export default function QuoteReviewPanel({
   selectedPageIds,
   selectedFeatureIds,
   siteType,
+  isMigration,
   couponDiscount,
   couponCode,
   originalTotal,
@@ -55,6 +57,7 @@ export default function QuoteReviewPanel({
         selectedPageIds={selectedPageIds}
         selectedFeatureIds={selectedFeatureIds}
         siteType={siteType}
+        isMigration={isMigration}
         couponDiscount={couponDiscount}
         couponCode={couponCode || null}
         originalTotal={originalTotal}

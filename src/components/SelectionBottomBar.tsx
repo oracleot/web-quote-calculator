@@ -9,6 +9,7 @@ interface SelectionBottomBarProps {
   selectedFeatures: SelectionItem[];
   livePrice: number;
   featureTotal: number;
+  migrationFee?: number;
   onContinue: () => void;
   canContinue: boolean;
 }
@@ -18,11 +19,12 @@ export default function SelectionBottomBar({
   selectedFeatures,
   livePrice,
   featureTotal,
+  migrationFee = 0,
   onContinue,
   canContinue,
 }: SelectionBottomBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const total = livePrice + featureTotal;
+  const total = livePrice + featureTotal + migrationFee;
   const pageCount = selectedPages.length;
   const allItems = [...selectedPages, ...selectedFeatures];
   const triggerRef = useRef<HTMLButtonElement>(null);

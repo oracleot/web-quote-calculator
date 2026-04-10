@@ -27,7 +27,13 @@ export const FEATURES = [
   { id: 'multilang', label: 'Multi-language Support', price: 80, description: 'Localized content in multiple languages' },
 ];
 
-export function calculateQuote(selectedPageIds: string[], selectedFeatureIds: string[]) {
+export const MIGRATION_FEE = 100;
+
+export function calculateQuote(
+  selectedPageIds: string[],
+  selectedFeatureIds: string[],
+  options?: { isMigration?: boolean }
+) {
   const pageCount = selectedPageIds.length;
 
   // Flat base price of £250
@@ -42,13 +48,15 @@ export function calculateQuote(selectedPageIds: string[], selectedFeatureIds: st
     return total + (feature?.price ?? 0);
   }, 0);
 
-  const total = basePrice + pagesCost + featuresCost;
+  const migrationFee = options?.isMigration ? MIGRATION_FEE : 0;
+  const total = basePrice + pagesCost + featuresCost + migrationFee;
 
   return {
     basePrice,
     pagesCost,
     extraPages,
     featuresCost,
+    migrationFee,
     total,
   };
 }

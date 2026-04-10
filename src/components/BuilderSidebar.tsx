@@ -9,6 +9,7 @@ interface BuilderSidebarProps {
   selectedFeatures: SelectionItem[];
   livePrice: number;
   featureTotal: number;
+  migrationFee?: number;
   onContinue: () => void;
   canContinue: boolean;
 }
@@ -19,11 +20,12 @@ export default function BuilderSidebar({
   selectedFeatures,
   livePrice,
   featureTotal,
+  migrationFee = 0,
   onContinue,
   canContinue,
 }: BuilderSidebarProps) {
   const allItems = [...selectedPages, ...selectedFeatures];
-  const total = livePrice + featureTotal;
+  const total = livePrice + featureTotal + migrationFee;
 
   return (
     <aside className="builder-sidebar hidden sm:flex flex-col">
@@ -85,6 +87,12 @@ export default function BuilderSidebar({
           <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
             <span>Pages</span>
             <span className="text-[var(--text-secondary)]">£{livePrice}</span>
+          </div>
+        )}
+        {migrationFee > 0 && (
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span>Migration</span>
+            <span className="text-[#818cf8]">+£{migrationFee}</span>
           </div>
         )}
 

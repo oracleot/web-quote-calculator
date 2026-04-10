@@ -14,6 +14,7 @@ interface FormPanelProps {
   couponCode: string;
   couponStatus: 'idle' | 'valid' | 'invalid' | 'error';
   couponDiscount: number | null;
+  isMigration?: boolean;
   onNameChange: (v: string) => void;
   onEmailChange: (v: string) => void;
   onCouponChange: (v: string) => void;
@@ -32,6 +33,7 @@ export default function FormPanel({
   couponCode,
   couponStatus,
   couponDiscount,
+  isMigration = false,
   onNameChange,
   onEmailChange,
   onCouponChange,
@@ -122,6 +124,7 @@ export default function FormPanel({
                   couponCode={couponCode}
                   couponStatus={couponStatus}
                   couponDiscount={couponDiscount}
+                  isMigration={isMigration}
                   onNameChange={onNameChange}
                   onEmailChange={onEmailChange}
                   onCouponChange={onCouponChange}
@@ -169,6 +172,7 @@ export default function FormPanel({
                   couponCode={couponCode}
                   couponStatus={couponStatus}
                   couponDiscount={couponDiscount}
+                  isMigration={isMigration}
                   onNameChange={onNameChange}
                   onEmailChange={onEmailChange}
                   onCouponChange={onCouponChange}

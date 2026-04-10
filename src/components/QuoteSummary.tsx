@@ -6,6 +6,7 @@ interface QuoteSummaryProps {
   selectedPageIds: string[];
   selectedFeatureIds: string[];
   siteType: 'one-page' | 'multi-page';
+  isMigration?: boolean;
   couponDiscount?: number | null;
   couponCode?: string | null;
   originalTotal?: number | null;
@@ -15,11 +16,12 @@ export default function QuoteSummary({
   selectedPageIds,
   selectedFeatureIds,
   siteType,
+  isMigration = false,
   couponDiscount,
   couponCode,
   originalTotal,
 }: QuoteSummaryProps) {
-  const quote = calculateQuote(selectedPageIds, selectedFeatureIds);
+  const quote = calculateQuote(selectedPageIds, selectedFeatureIds, { isMigration });
   const selectedPages = PAGES.filter((p) => selectedPageIds.includes(p.id));
   const selectedFeatures = FEATURES.filter((f) => selectedFeatureIds.includes(f.id));
 
@@ -116,6 +118,19 @@ export default function QuoteSummary({
                   <span className="font-medium text-white">£{f.price}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Migration fee */}
+          {isMigration && (
+            <div className="flex items-center justify-between animate-fade-in">
+              <div className="flex items-center gap-2 text-[#94a3b8]">
+                <svg className="w-3.5 h-3.5 text-[#818cf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Migration (audit, transfer, redirects)
+              </div>
+              <span className="font-medium text-white">£{quote.migrationFee}</span>
             </div>
           )}
 

@@ -1,98 +1,79 @@
-# SPEC.md — Web Quote Calculator Design Polish
+# SPEC.md — Web Quote Calculator: Migration Track + Maintenance Tiers
 
-## Project: web-quote-calculator
-## Created: 2026-04-05
-## Based on: docs/review.md (Design Review, 8.5/10)
+## What
 
----
+Two features added to the Web Quote Calculator:
 
-## Scope: Tier 1 (all 4) + Tier 2 top 3
+1. **Migration Track (Step 0)** — A "New website" vs "Migrate existing website" toggle above the StepIndicator on Step 1. Migration adds a flat £100 fee.
+2. **Maintenance Tiers** — Three tier cards shown on the success screen after inquiry submission, clearly labelled "Optional".
 
-### Tier 1 — ALL must ship
+## Tech
 
-#### 1. Price Display Hero (Step 3/4)
-- Quote total on Step 3/4: `text-5xl`+, `font-extrabold`, white
-- Subtle amber glow via `text-shadow` / `box-shadow`
-- Gradient text on the price number (white → muted)
-- Currency "GBP" label smaller, muted
-- Keep discounted green price distinct
+- **Framework:** Next.js 15 + TypeScript
+- **Styling:** Tailwind CSS (dark mode, CSS variables)
+- **Animation:** Framer Motion (existing patterns)
+- **No new dependencies**
 
-#### 2. Left-Border Accent on Selected Cards
-- `PageSelector` cards: when selected, replace full border with `border-l-4 border-[#818cf8]`
-- `FeatureSelector` cards: same treatment
-- Remove the `box-shadow` ring on selected cards, use left-border only
+## Files Affected
 
-#### 3. Step Direction Animations (Framer Motion)
-- Track `direction` state: `1` (forward) or `-1` (backward)
-- `motion.div` variants: `x: direction * 40 → 0` for enter, `x: 0 → direction * -40` for exit
-- Forward nav (Continue button): slide in from right
-- Backward nav (Back button): slide in from left
-- Need `framer-motion` installed — check package.json
+### Modify
+- `src/lib/pricing.ts` — `calculateQuote()` accepts optional `isMigration: boolean`; adds £100 flat fee when true
+- `src/app/page.tsx` — add `isMigration: boolean` state; pass it to `calculateQuote()`; show `MigrationToggle` on Step 1; show `MaintenanceTiers` on success
 
-#### 4. Live Running Price on Step 1
-- Sticky price counter top-right of the PageSelector card grid
-- Shows running total as pages are selected
-- Format: `£{total}` with small "running total" label
-- Updates reactively as selected pages change
+### Create
+- `src/components/MigrationToggle.tsx` — Step 0 toggle cards (New website / Migrate existing)
+- `src/components/MaintenanceTiers.tsx` — Success screen tier cards (Basic £25/mo, Standard £40/mo)
 
-### Tier 2 — Top 3
+## Pricing Logic
 
-#### 5. Two-Font System — Instrument Serif
-- Load `Instrument Serif` from Google Fonts in `layout.tsx`
-- Apply to: `<h1>` in header, `<h2>` step title, total price in QuoteSummary
-- Keep Inter for body/UI text
-- Fallback: `Georgia, serif`
+```typescript
+// src/lib/pricing.ts
+export function calculateQuote(
+  selectedPageIds: string[],
+  selectedFeatureIds: string[],
+  options?: { isMigration?: boolean }
+)
+// Returns { ..., migrationFee: 100 } when isMigration === true
+// Total = base + pages + features + (isMigration ? 100 : 0)
+```
 
-#### 6. Floating Form Labels — InquiryForm
-- All form fields (Name, Email, Coupon) get floating label pattern
-- Label sits over the input as placeholder
-- On focus OR when field has value: label animates up to top-left
-- CSS transition: `transform`, `font-size`, `color`
-- Use `peer` / `peer-focus` pattern in Tailwind (or CSS)
+## MigrationToggle UI
 
-#### 7. Mobile Card Grouping — PageSelector
-- Group pages into 3 collapsible categories:
-  - **Core:** Home, About, Services, Contact
-  - **Marketing:** Gallery, Testimonials, Team, FAQ
-  - **Utility:** Pricing, Blog
-- Each category is a collapsible `<details>`/`<summary>` or custom accordion
-- Show count badge per category
-- Mobile-only collapse (hide on desktop via `hidden sm:block`)
+- Two clickable cards side by side (desktop) / segmented control (mobile)
+- Default: "New website" selected
+- "Migrate existing website" card shows a note: "Includes full site audit, content transfer, and redirect setup (+£100)"
+- Selected state: indigo background matching the one-page/multi-page toggle style
+- Appears above `StepIndicator` on Step 1 only (steps 2–4 don't show it)
 
----
+## MaintenanceTiers UI
 
-## File Changes
-
-| File | Change |
-|------|--------|
-| `src/app/layout.tsx` | Add Instrument Serif Google Font |
-| `src/app/globals.css` | Add price-hero glow, gradient text, floating label styles |
-| `src/app/page.tsx` | Direction state, direction-aware step transitions, live price on Step 1 |
-| `src/components/PageSelector.tsx` | Left-border accent, mobile grouping, live price display |
-| `src/components/FeatureSelector.tsx` | Left-border accent on selected |
-| `src/components/QuoteSummary.tsx` | Hero price display (4xl+, glow, gradient) |
-| `src/components/InquiryForm.tsx` | Floating labels on all fields |
-| `src/hooks/useDirection.ts` | New hook: tracks nav direction (1 / -1) |
-
----
+- Shown in `InquiryForm` when `isSuccess === true`, BEFORE or alongside the success message
+- **"Optional"** label prominently at top
+- Section heading: "Keep your site healthy"
+- Two tier cards (Basic / Standard):
+  - Basic £25/mo: hosting, 2 bi-weekly health checks with reports, £10/hr extra work
+  - Standard £40/mo: hosting, AI assistant on WhatsApp for anytime updates, £7/hr complex features
+- "New website" builds (isMigration === false): "3 months free" badge on Standard tier only
+- Below tiers: "Not ready yet? No problem — reach out anytime"
+- No buttons needed — informational display only
+- Cards match existing dark card design system (border, bg, hover)
 
 ## Acceptance Criteria
 
-- [ ] Price on Step 3/4: `text-5xl`, bold, white, amber glow, gradient number
-- [ ] Selected cards: `border-l-4 border-[#818cf8]` (no full border ring)
-- [ ] Forward nav: slide from right. Backward: slide from left
-- [ ] Step 1 shows live running price top-right of grid
-- [ ] Instrument Serif on H1 + price; Inter on body
-- [ ] All InquiryForm fields have floating labels
-- [ ] Mobile: pages grouped into 3 collapsible categories
-- [ ] `pnpm run lint` → 0 errors
-- [ ] `pnpm run typecheck` → 0 errors
-- [ ] `pnpm run build` → succeeds
+1. Step 0 toggle is visible above StepIndicator on step 1
+2. Selecting "Migrate" adds £100 to the live total shown in sidebar and bottom bar
+3. Migration flag persists through all steps and is passed to the inquiry API
+4. Maintenance tiers section appears on the success screen, clearly marked "Optional"
+5. "3 months free" badge only shows when `isMigration === false` (new build)
+6. All existing steps 1–4 work exactly as before — no regression
+7. `pnpm lint && pnpm typecheck && pnpm build` all pass
+8. No file exceeds 200 lines
 
----
+## File Size Budget
 
-## Tech Notes
-- Framer Motion: check if installed, install if not (`framer-motion` package)
-- Tailwind CSS v4 (used with `@theme inline` — no `tailwind.config.js`)
-- CSS variables already in `globals.css`
-- Google Fonts: load in `<head>` of `layout.tsx`
+| File | Max Lines |
+|------|-----------|
+| src/components/MigrationToggle.tsx | 120 |
+| src/components/MaintenanceTiers.tsx | 120 |
+| src/lib/pricing.ts | 50 |
+| src/app/page.tsx | 200 |
