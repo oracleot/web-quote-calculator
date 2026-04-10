@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StepIndicator from '@/components/StepIndicator';
 import BuilderPhase from '@/components/BuilderPhase';
@@ -8,8 +8,8 @@ import QuoteReviewPanel from '@/components/QuoteReviewPanel';
 import FormPanel from '@/components/FormPanel';
 import MigrationToggle from '@/components/MigrationToggle';
 import SelectionBottomBar from '@/components/SelectionBottomBar';
-import MaintenancePlanSelector from '@/components/MaintenancePlanSelector';
 import FinalConfirmation from '@/components/FinalConfirmation';
+import SupportPlanStep from '@/components/SupportPlanStep';
 import { calculateQuote } from '@/lib/pricing';
 import { useDirection } from '@/hooks/useDirection';
 import { useSelectionList } from '@/hooks/useSelectionList';
@@ -200,23 +200,13 @@ export default function Home() {
 
       {/* Step 4 — Maintenance Plan Selection */}
       {step === 4 && (
-        <div className="max-w-2xl mx-auto w-full px-4">
-          <div className="card p-6 sm:p-8 animate-scale-in">
-            <AnimatePresence mode="wait" custom={direction.current}>
-              <motion.div key="step5" custom={direction.current} variants={getVariants(direction.current)}
-                initial="enter" animate="center" exit="exit"
-                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}>
-                <MaintenancePlanSelector
-                  selectedPlan={selectedMaintenancePlan}
-                  onSelectPlan={setSelectedMaintenancePlan}
-                  isMigration={isMigration}
-                  onContinue={() => { setShowFormPanel(true); setStep(5); }}
-                  onSkip={() => { setSelectedMaintenancePlan('none'); setStep(6); }}
-                />
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
+        <SupportPlanStep
+          selectedMaintenancePlan={selectedMaintenancePlan}
+          setSelectedMaintenancePlan={setSelectedMaintenancePlan}
+          isMigration={isMigration}
+          setShowFormPanel={setShowFormPanel}
+          setStep={setStep}
+        />
       )}
 
       {/* Step 6 — Final Confirmation */}
