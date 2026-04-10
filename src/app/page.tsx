@@ -50,7 +50,7 @@ export default function Home() {
 
   const { direction, goNext, goPrev } = useDirection();
 
-  const livePrice = useMemo(() => calculateQuote(selectedPages, []).total, [selectedPages]);
+  const livePrice = useMemo(() => calculateQuote(selectedPages, [], { isMigration }).total, [selectedPages, isMigration]);
   const featureTotal = useMemo(() => calculateQuote([], selectedFeatures).featuresCost, [selectedFeatures]);
   const quote = useMemo(
     () => calculateQuote(selectedPages, selectedFeatures, { isMigration }),
