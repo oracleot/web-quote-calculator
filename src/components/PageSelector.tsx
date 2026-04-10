@@ -103,7 +103,7 @@ function PageCard({
       onClick={() => onToggle(pageId)}
       className={`select-card p-4 text-left w-full ${isSelected ? 'selected' : ''}`}
     >
-      <div className="flex items-start gap-3 relative z-10">
+      <div className="flex items-start gap-3">
         <div
           className={`checkbox flex-shrink-0 ${isSelected ? 'checked' : ''}`}
         >
@@ -116,14 +116,14 @@ function PageCard({
 
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div
-            className={`flex-shrink-0 ${isSelected ? 'text-[#818cf8]' : 'text-[#64748b]'}`}
-            style={{ transition: 'color 0.2s' }}
+            className={`flex-shrink-0 ${isSelected ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}
+            style={{ transition: 'color 0.15s' }}
           >
             {PAGE_ICONS[pageId]}
           </div>
           <div className="text-left min-w-0">
-            <div className="font-medium text-white text-sm leading-tight">{page.label}</div>
-            <div className="text-xs text-[#64748b] leading-tight mt-0.5">{page.description}</div>
+            <div className="font-medium text-[var(--text-primary)] text-sm leading-tight">{page.label}</div>
+            <div className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">{page.description}</div>
           </div>
         </div>
       </div>
@@ -157,50 +157,50 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
     <div>
       {/* Site type toggle */}
       <div className="flex items-center gap-3 mb-6 px-1">
-        <span className="text-xs font-medium text-[#64748b]">Website type:</span>
-        <div className="flex bg-[rgba(255,255,255,0.04)] rounded-lg p-0.5 border border-[rgba(255,255,255,0.06)]">
+        <span className="text-xs font-medium text-[var(--text-muted)]">Website type:</span>
+        <div className="flex bg-[var(--bg-elevated)] rounded-lg p-0.5 border border-[var(--border)]">
           <button
             onClick={() => handleSiteTypeChange('one-page')}
-            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
               isOnePage
-                ? 'bg-[#818cf8] text-white shadow-sm'
-                : 'text-[#94a3b8] hover:text-white'
+                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             One page
           </button>
           <button
             onClick={() => handleSiteTypeChange('multi-page')}
-            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
               !isOnePage
-                ? 'bg-[#818cf8] text-white shadow-sm'
-                : 'text-[#94a3b8] hover:text-white'
+                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             Multi-page
           </button>
         </div>
-        <span className="ml-auto text-xs text-[#818cf8] font-medium">£{livePrice ?? 250}</span>
+        <span className="ml-auto text-xs text-[var(--accent)] font-mono font-medium">£{livePrice ?? 250}</span>
       </div>
 
       {/* Pages info */}
       <div className="flex items-center gap-3 mb-5 px-1">
-        <div className="flex items-center gap-1.5 text-xs text-[#64748b]">
+        <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
           {isOnePage ? 'Choose sections for your landing page' : 'First 4 pages included'}
         </div>
-        <div className="ml-auto text-xs text-[#818cf8] bg-[rgba(129,140,248,0.1)] border border-[rgba(129,140,248,0.2)] rounded-full px-2.5 py-0.5 font-medium">
+        <div className="ml-auto text-xs text-[var(--accent)] bg-[var(--accent-muted)] border border-[rgba(34,211,238,0.2)] rounded-full px-2.5 py-0.5 font-medium">
           {isOnePage
             ? `${selected.length} ${selected.length === 1 ? 'section' : 'sections'} selected`
             : `${selected.length} selected`}
         </div>
       </div>
 
-      {/* Desktop: flat grid (rendered only on desktop) */}
+      {/* Desktop: flat grid */}
       {!isMobile && (
-        <div className="grid gap-3 sm:grid-cols-2 stagger-children">
+        <div className="grid gap-3 sm:grid-cols-2">
           {PAGES.map((page) => {
             const isSelected = selected.includes(page.id);
             return (
@@ -215,7 +215,7 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
         </div>
       )}
 
-      {/* Mobile: grouped collapsible categories (rendered only on mobile) */}
+      {/* Mobile: grouped collapsible categories */}
       {isMobile && (
         <div className="space-y-3">
           {groupedPages.map((group) => {
@@ -225,18 +225,18 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
                 <summary>
                   <span className="flex items-center gap-2">
                     <span>{group.label}</span>
-                    <span className="text-[10px] text-[#64748b] normal-case font-normal">
+                    <span className="text-[10px] text-[var(--text-muted)] normal-case font-normal">
                       {group.description}
                     </span>
                   </span>
                   <span className="flex items-center gap-2">
                     {selectedInGroup > 0 && (
-                      <span className="bg-[#818cf8] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      <span className="bg-[var(--accent)] text-[var(--accent-fg)] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {selectedInGroup}
                       </span>
                     )}
                     <svg
-                      className="w-3.5 h-3.5 text-[#64748b] transition-transform duration-200"
+                      className="w-3.5 h-3.5 text-[var(--text-muted)] transition-transform duration-150"
                       style={{ transform: 'rotate(0deg)' }}
                       fill="none"
                       viewBox="0 0 24 24"

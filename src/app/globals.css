@@ -1,24 +1,29 @@
 @import "tailwindcss";
 
+/* ══════════════════════════════════════════════════
+   DESIGN SYSTEM — "Confident & Bold"
+   Unified cyan accent, clean flat surfaces, sharp type.
+   ══════════════════════════════════════════════════ */
+
 :root {
-  --bg-base: #0f1117;
-  --bg-elevated: #181b25;
-  --bg-card: #1e2130;
-  --bg-card-hover: #252840;
+  --bg-base: #09090b;
+  --bg-elevated: #18181b;
+  --bg-card: #1c1c22;
+  --bg-card-hover: #26262e;
   --border: rgba(255, 255, 255, 0.07);
-  --border-active: rgba(129, 140, 248, 0.4);
-  --accent: #818cf8;
-  --accent-glow: rgba(129, 140, 248, 0.2);
-  --accent-dark: #6366f1;
-  --accent-amber: #fbbf24;
-  --accent-amber-glow: rgba(251, 191, 36, 0.15);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --border-active: rgba(34, 211, 238, 0.4);
+  --accent: #22d3ee;
+  --accent-hover: #06b6d4;
+  --accent-muted: rgba(34, 211, 238, 0.15);
+  --accent-subtle: rgba(34, 211, 238, 0.08);
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
   --success: #34d399;
   --success-bg: rgba(52, 211, 153, 0.1);
   --error: #f87171;
   --error-bg: rgba(248, 113, 113, 0.1);
+  --accent-fg: #09090b;
 }
 
 @theme inline {
@@ -43,176 +48,121 @@ body {
   min-height: 100vh;
 }
 
-/* Display font — Instrument Serif for headlines and hero prices */
+/* Display font — Bricolage Grotesque for headlines and step titles */
 .font-display {
-  font-family: var(--font-display), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-display), 'Bricolage Grotesque', 'Inter', sans-serif;
 }
 
-/* Animated background grid */
-.bg-grid {
-  background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 40px 40px;
+/* Monospace font — JetBrains Mono for prices and code */
+.font-mono {
+  font-family: var(--font-mono), 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Ambient glow */
-.ambient-glow {
-  position: fixed;
-  top: -200px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(ellipse, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Card base */
+/* ── Card base ── */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  transition: border-color 0.2s ease;
 }
 
 .card:hover {
-  border-color: rgba(255,255,255,0.12);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Selection card — selectable item */
+/* ── Selection card ── */
 .select-card {
   background: var(--bg-card);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-left: 3px solid transparent;
-  border-radius: 12px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
-}
-
-.select-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--accent-glow), transparent);
-  opacity: 0;
-  transition: opacity 0.25s;
 }
 
 .select-card:hover {
-  border-color: rgba(255,255,255,0.15);
-  border-left-color: transparent;
   background: var(--bg-card-hover);
-}
-
-.select-card:hover::before {
-  opacity: 0.5;
+  border-color: rgba(255, 255, 255, 0.12);
+  border-left-color: transparent;
 }
 
 .select-card.selected {
   border-left-color: var(--accent);
-  border-top-color: rgba(129,140,248,0.2);
-  border-right-color: rgba(129,140,248,0.2);
-  border-bottom-color: rgba(129,140,248,0.2);
-  background: rgba(129, 140, 248, 0.06);
+  border-top-color: var(--border-active);
+  border-right-color: var(--border-active);
+  border-bottom-color: var(--border-active);
+  background: var(--accent-subtle);
 }
 
-.select-card.selected::before {
-  opacity: 1;
-}
-
-/* Checkbox custom */
+/* ── Checkbox / toggle mark ── */
 .checkbox {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
   border: 1.5px solid var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
 .checkbox.checked {
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow);
 }
 
-/* Price tag */
+/* ── Price tag ── */
 .price-tag {
-  background: linear-gradient(135deg, rgba(129,140,248,0.15), rgba(99,102,241,0.08));
-  border: 1px solid rgba(129,140,248,0.25);
+  background: var(--accent-muted);
+  border: 1px solid rgba(34, 211, 238, 0.25);
   color: var(--accent);
 }
 
-/* Primary button */
+/* ── Primary button — flat, no gradient ── */
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-dark), #4f46e5);
-  color: white;
+  background: var(--accent);
+  color: var(--accent-fg);
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 12px 24px;
   font-weight: 600;
   font-size: 15px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-  opacity: 0;
-  transition: opacity 0.2s;
+  transition: background 0.15s ease, opacity 0.15s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
-}
-
-.btn-primary:hover:not(:disabled)::before {
-  opacity: 1;
+  background: var(--accent-hover);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+  opacity: 0.9;
 }
 
 .btn-primary:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
-  box-shadow: none;
 }
 
-/* Secondary button */
+/* ── Secondary button ── */
 .btn-secondary {
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 12px 24px;
   font-weight: 500;
   font-size: 15px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
 }
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-card-hover);
   color: var(--text-primary);
-  border-color: rgba(255,255,255,0.12);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .btn-secondary:disabled {
@@ -220,7 +170,7 @@ body {
   cursor: not-allowed;
 }
 
-/* Form inputs with floating labels */
+/* ── Form inputs ── */
 .floating-form-group {
   position: relative;
 }
@@ -232,7 +182,7 @@ body {
   transform: translateY(-50%);
   font-size: 15px;
   color: var(--text-muted);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   background: transparent;
   padding: 0 4px;
 }
@@ -254,13 +204,13 @@ body {
 .form-input {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 12px 16px;
   padding-top: 20px;
   color: var(--text-primary);
   font-size: 15px;
   width: 100%;
-  transition: all 0.2s;
+  transition: border-color 0.15s ease;
   outline: none;
 }
 
@@ -270,77 +220,57 @@ body {
 
 .form-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 2px var(--accent-muted);
 }
 
-/* Step indicator pill */
-.step-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* ── Step indicator — horizontal progress bar ── */
+.step-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-.step-dot {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-.step-dot.inactive {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-}
-
-.step-dot.active {
+.step-progress-fill {
+  height: 100%;
   background: var(--accent);
-  color: white;
-  box-shadow: 0 0 20px var(--accent-glow), 0 0 40px rgba(99,102,241,0.1);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.step-dot.completed {
-  background: var(--success);
-  color: white;
+.step-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
 }
 
 .step-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
-  transition: color 0.3s;
+  transition: color 0.2s;
+  text-align: center;
+  flex: 1;
 }
 
 .step-label.active {
-  color: var(--text-primary);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.step-label.completed {
+  color: var(--text-secondary);
 }
 
 .step-label.inactive {
   color: var(--text-muted);
 }
 
-.step-connector {
-  height: 2px;
-  width: 32px;
-  border-radius: 1px;
-  background: var(--border);
-  transition: background 0.3s;
-}
-
-.step-connector.completed {
-  background: var(--success);
-}
-
-/* Animations */
+/* ── Animations — single snappy entrance, no ambient effects ── */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -356,7 +286,7 @@ body {
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
@@ -364,108 +294,59 @@ body {
   }
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
-  50% { box-shadow: 0 0 30px rgba(99,102,241,0.3); }
-}
-
 .animate-fade-in-up {
-  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeInUp 0.2s ease-out forwards;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.2s ease-out forwards;
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: scaleIn 0.2s ease-out forwards;
 }
 
-.animate-slide-in-right {
-  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-/* Stagger children */
-.stagger-children > * {
-  opacity: 0;
-  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
-.stagger-children > *:nth-child(9) { animation-delay: 480ms; }
-.stagger-children > *:nth-child(10) { animation-delay: 540ms; }
-
-/* Quote total highlight */
+/* ── Quote total ── */
 .quote-total {
-  background: linear-gradient(135deg, rgba(129,140,248,0.12), rgba(99,102,241,0.06));
-  border: 1px solid rgba(129,140,248,0.2);
-  border-radius: 12px;
+  background: var(--accent-subtle);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  border-radius: 8px;
 }
 
-/* Hero price — big, glowing, gradient */
+/* ── Hero price — big monospace number, solid color, no glow ── */
 .price-hero {
-  font-size: 3.5rem;
-  font-weight: 800;
+  font-size: 2.5rem;
+  font-weight: 700;
   line-height: 1;
-  background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 60%, #818cf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 20px rgba(129, 140, 248, 0.4)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.15));
-  font-family: var(--font-display), 'Instrument Serif', Georgia, serif;
+  color: var(--text-primary);
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  letter-spacing: -0.02em;
 }
 
 @media (min-width: 640px) {
   .price-hero {
-    font-size: 4.5rem;
+    font-size: 3rem;
   }
 }
 
 .price-hero-currency {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-muted);
-  background: none;
-  -webkit-text-fill-color: var(--text-muted);
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
 }
 
 .price-hero-discounted {
-  background: linear-gradient(135deg, #34d399 0%, #6ee7b7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 16px rgba(52, 211, 153, 0.35));
+  color: var(--success);
 }
 
-/* Success checkmark */
+/* ── Success ring ── */
 .success-ring {
   background: var(--success-bg);
-  border: 1px solid rgba(52,211,153,0.3);
+  border: 1px solid rgba(52, 211, 153, 0.3);
 }
 
-/* Badge/chip */
+/* ── Chip / badge ── */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -478,7 +359,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* Scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -490,23 +371,23 @@ body {
   border-radius: 3px;
 }
 
-/* Number counter animation */
+/* ── Number counter animation ── */
 @keyframes countUp {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .count-up {
-  animation: countUp 0.3s ease-out forwards;
+  animation: countUp 0.2s ease-out forwards;
 }
 
-/* Focus visible */
+/* ── Focus visible ── */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* Theme toggle */
+/* ── Theme toggle ── */
 .theme-toggle {
   position: fixed;
   top: 16px;
@@ -514,7 +395,7 @@ body {
   z-index: 50;
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   color: var(--text-secondary);
@@ -522,34 +403,25 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .theme-toggle:hover {
   background: var(--bg-card-hover);
   color: var(--text-primary);
-  border-color: rgba(255,255,255,0.12);
-  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.light .theme-toggle:hover {
-  border-color: rgba(0,0,0,0.12);
-}
-
-.light .theme-toggle {
-  border-color: rgba(0,0,0,0.08);
-}
-
-/* Selection color */
+/* ── Selection color ── */
 ::selection {
-  background: rgba(129,140,248,0.3);
+  background: rgba(34, 211, 238, 0.3);
   color: var(--text-primary);
 }
 
-/* Mobile category group */
+/* ── Page category (mobile) ── */
 .page-category {
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--bg-card);
 }
@@ -568,7 +440,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   background: var(--bg-elevated);
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 
 .page-category summary::-webkit-details-marker {
@@ -583,109 +455,94 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
-/* Live price counter */
+/* ── Live price counter ── */
 .live-price-counter {
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-/* ==================== LIGHT THEME ==================== */
-/* Editorial warmth — cream tones, amber accents, refined & premium */
+
+/* ══════════════════════════════════════════════════
+   LIGHT THEME — same accent, unified personality
+   ══════════════════════════════════════════════════ */
 .light {
-  --bg-base: #faf9f7;
+  --bg-base: #fafaf9;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f5f3f0;
-  --border: rgba(15, 15, 15, 0.07);
-  --border-active: rgba(180, 100, 50, 0.4);
-  --accent: #b46432;
-  --accent-glow: rgba(180, 100, 50, 0.12);
-  --accent-dark: #8b4513;
-  --accent-amber: #d97706;
-  --accent-amber-glow: rgba(217, 119, 6, 0.1);
-  --text-primary: #1a1714;
-  --text-secondary: #5c534a;
-  --text-muted: #9c9189;
+  --bg-card-hover: #f4f4f5;
+  --border: rgba(9, 9, 11, 0.08);
+  --border-active: rgba(8, 145, 178, 0.35);
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-muted: rgba(8, 145, 178, 0.12);
+  --accent-subtle: rgba(8, 145, 178, 0.06);
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
   --success: #059669;
   --success-bg: rgba(5, 150, 105, 0.08);
   --error: #dc2626;
   --error-bg: rgba(220, 38, 38, 0.08);
+  --accent-fg: #ffffff;
 }
 
-/* Light theme background grid — warm subtle lines */
-.light .bg-grid {
-  background-image:
-    linear-gradient(rgba(15,15,15,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15,15,15,0.015) 1px, transparent 1px);
-}
-
-/* Light theme ambient glow — warm amber */
-.light .ambient-glow {
-  background: radial-gradient(ellipse, rgba(180, 120, 60, 0.1) 0%, transparent 70%);
-}
-
-/* Light theme card */
+/* Light card */
 .light .card {
-  background: var(--bg-card);
-  border-color: var(--border);
-  box-shadow: 0 2px 8px rgba(15, 10, 5, 0.04), 0 1px 2px rgba(15, 10, 5, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .light .card:hover {
-  border-color: rgba(15, 15, 15, 0.12);
-  box-shadow: 0 8px 32px rgba(15, 10, 5, 0.08), 0 2px 8px rgba(15, 10, 5, 0.04);
+  border-color: rgba(9, 9, 11, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* Light theme selection card */
+/* Light select card */
 .light .select-card {
   border-color: var(--border);
   border-left-color: transparent;
-  background: var(--bg-card);
 }
 
 .light .select-card:hover {
-  border-color: rgba(15, 15, 15, 0.14);
+  border-color: rgba(9, 9, 11, 0.14);
   border-left-color: transparent;
   background: var(--bg-card-hover);
 }
 
 .light .select-card.selected {
   border-left-color: var(--accent);
-  border-top-color: rgba(180,100,50,0.3);
-  border-right-color: rgba(180,100,50,0.3);
-  border-bottom-color: rgba(180,100,50,0.3);
-  background: rgba(180, 100, 50, 0.05);
+  border-top-color: var(--border-active);
+  border-right-color: var(--border-active);
+  border-bottom-color: var(--border-active);
+  background: var(--accent-subtle);
 }
 
-/* Light theme primary button — warm terracotta */
+/* Light primary button */
 .light .btn-primary {
-  background: linear-gradient(135deg, #c26832, #a0522d);
-  box-shadow: 0 4px 14px rgba(180, 100, 50, 0.3);
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 .light .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(180, 100, 50, 0.4);
-  transform: translateY(-1px);
+  background: var(--accent-hover);
 }
 
-/* Light theme secondary button */
+/* Light secondary button */
 .light .btn-secondary {
   color: var(--text-secondary);
-  border-color: rgba(15, 15, 15, 0.1);
-  background: transparent;
+  border-color: rgba(9, 9, 11, 0.1);
 }
 
 .light .btn-secondary:hover:not(:disabled) {
   background: var(--bg-card-hover);
   color: var(--text-primary);
-  border-color: rgba(15, 15, 15, 0.15);
+  border-color: rgba(9, 9, 11, 0.15);
 }
 
-/* Light theme form inputs */
+/* Light form inputs */
 .light .form-input {
   background: var(--bg-elevated);
-  border-color: rgba(15, 15, 15, 0.1);
+  border-color: rgba(9, 9, 11, 0.1);
   color: var(--text-primary);
 }
 
@@ -695,103 +552,58 @@ body {
 
 .light .form-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(180, 100, 50, 0.12);
+  box-shadow: 0 0 0 2px var(--accent-muted);
 }
 
-/* Light theme floating label */
+/* Light floating label */
 .light .floating-label.float-up {
   background: white;
 }
 
-/* Light theme step indicator */
-.light .step-dot.inactive {
-  background: var(--bg-elevated);
-  border-color: rgba(15, 15, 15, 0.1);
-  color: var(--text-muted);
-}
-
-.light .step-dot.active {
-  background: var(--accent);
-  color: white;
-  box-shadow: 0 0 20px rgba(180, 100, 50, 0.25);
-}
-
-.light .step-connector {
-  background: rgba(15, 15, 15, 0.08);
-}
-
-.light .step-connector.completed {
-  background: var(--success);
-}
-
-/* Light theme checkbox */
-.light .checkbox {
-  border-color: var(--text-muted);
-}
-
-.light .checkbox.checked {
-  background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 12px rgba(180, 100, 50, 0.2);
-}
-
-/* Light theme price tag */
-.light .price-tag {
-  background: linear-gradient(135deg, rgba(180, 100, 50, 0.1), rgba(160, 80, 30, 0.06));
-  border-color: rgba(180, 100, 50, 0.2);
-  color: var(--accent);
-}
-
-/* Light theme quote total */
-.light .quote-total {
-  background: linear-gradient(135deg, rgba(180, 100, 50, 0.08), rgba(160, 80, 30, 0.04));
-  border-color: rgba(180, 100, 50, 0.15);
-}
-
-/* Light theme theme toggle */
+/* Light theme toggle */
 .light .theme-toggle {
   background: var(--bg-elevated);
-  border-color: rgba(15, 15, 15, 0.1);
+  border-color: rgba(9, 9, 11, 0.08);
   color: var(--text-secondary);
 }
 
 .light .theme-toggle:hover {
   background: var(--bg-card-hover);
   color: var(--text-primary);
-  border-color: rgba(15, 15, 15, 0.15);
+  border-color: rgba(9, 9, 11, 0.15);
 }
 
-/* Light theme scrollbar */
+/* Light scrollbar */
 .light ::-webkit-scrollbar-track {
   background: var(--bg-base);
 }
 
 .light ::-webkit-scrollbar-thumb {
-  background: rgba(15, 15, 15, 0.12);
+  background: rgba(9, 9, 11, 0.12);
 }
 
-/* Light theme success */
+/* Light success */
 .light .success-ring {
   background: var(--success-bg);
   border-color: rgba(5, 150, 105, 0.2);
 }
 
-/* Light theme selection color */
+/* Light selection color */
 .light ::selection {
-  background: rgba(180, 100, 50, 0.2);
+  background: rgba(8, 145, 178, 0.2);
   color: var(--text-primary);
 }
 
-/* Light theme chip */
+/* Light chip */
 .light .chip {
   background: var(--bg-elevated);
-  border-color: rgba(15, 15, 15, 0.08);
+  border-color: rgba(9, 9, 11, 0.08);
   color: var(--text-secondary);
 }
 
-/* Light theme page category */
+/* Light page category */
 .light .page-category {
-  border-color: rgba(15, 15, 15, 0.08);
+  border-color: rgba(9, 9, 11, 0.08);
   background: var(--bg-card);
 }
 
@@ -805,13 +617,13 @@ body {
 }
 
 .light .page-category[open] summary {
-  border-bottom-color: rgba(15, 15, 15, 0.08);
+  border-bottom-color: rgba(9, 9, 11, 0.08);
 }
+
 
 /* ══════════════════════════════════════════════════
    BUILDER LAYOUT — two-column: content (65%) + sidebar (35%)
-   Desktop only (≥640px). Mobile is full-width.
-══════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════ */
 
 .builder-layout {
   display: flex;
@@ -819,13 +631,11 @@ body {
   align-items: flex-start;
 }
 
-/* Card grid column — 65% */
 .builder-content {
   flex: 1 1 0%;
   min-width: 0;
 }
 
-/* Sticky sidebar — 35% */
 .builder-sidebar {
   width: 35%;
   flex-shrink: 0;
@@ -836,12 +646,11 @@ body {
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 20px;
   overflow: hidden;
 }
 
-/* Mobile sticky bottom bar */
 .builder-bottom-bar {
   position: fixed;
   bottom: 0;
@@ -856,37 +665,35 @@ body {
   gap: 12px;
 }
 
-/* Form panel (desktop: right panel, mobile: bottom sheet) */
 .form-panel {
   background: var(--bg-elevated);
   border-left: 1px solid var(--border);
 }
 
-/* Light theme variants */
+/* Light theme builder variants */
 .light .builder-sidebar {
   background: var(--bg-card);
   border-color: var(--border);
-  box-shadow: 0 2px 8px rgba(15, 10, 5, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .light .builder-bottom-bar {
   background: var(--bg-elevated);
-  border-top-color: rgba(15, 15, 15, 0.08);
+  border-top-color: rgba(9, 9, 11, 0.08);
 }
 
 .light .form-panel {
   background: var(--bg-elevated);
-  border-left-color: rgba(15, 15, 15, 0.08);
+  border-left-color: rgba(9, 9, 11, 0.08);
 }
 
-/* Mobile bottom bar spacing — add padding to page bottom on mobile builder */
+/* Mobile bottom bar spacing */
 @media (max-width: 639px) {
   .builder-layout-wrapper {
     padding-bottom: 72px;
   }
 }
 
-/* Remove gap between columns on mobile (stack) */
 @media (max-width: 639px) {
   .builder-layout {
     flex-direction: column;

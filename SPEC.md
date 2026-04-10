@@ -1,98 +1,87 @@
-# SPEC.md — Web Quote Calculator Design Polish
+# SPEC.md — Web Quote Calculator: Layout Fix + Flow Review
 
-## Project: web-quote-calculator
-## Created: 2026-04-05
-## Based on: docs/review.md (Design Review, 8.5/10)
+## What
 
----
+Fix all layout/vertical spacing issues in the 6-step Web Quote Calculator (Next.js 15, TypeScript, Tailwind, Framer Motion).
 
-## Scope: Tier 1 (all 4) + Tier 2 top 3
+## Key Issues
 
-### Tier 1 — ALL must ship
+1. **page.tsx is 228 lines** — must be split below 200 lines
+2. **Step 4 (SupportPlanStep) layout broken** — cards pushed to bottom with huge whitespace above
+3. **Inconsistent vertical spacing** across steps — some stretched, some cramped
+4. **Step indicator and header not properly separated** from content
 
-#### 1. Price Display Hero (Step 3/4)
-- Quote total on Step 3/4: `text-5xl`+, `font-extrabold`, white
-- Subtle amber glow via `text-shadow` / `box-shadow`
-- Gradient text on the price number (white → muted)
-- Currency "GBP" label smaller, muted
-- Keep discounted green price distinct
+## Root Cause Analysis
 
-#### 2. Left-Border Accent on Selected Cards
-- `PageSelector` cards: when selected, replace full border with `border-l-4 border-[#818cf8]`
-- `FeatureSelector` cards: same treatment
-- Remove the `box-shadow` ring on selected cards, use left-border only
+### Step 4 Layout Problem
+`SupportPlanStep` renders a `<div className="max-w-2xl mx-auto w-full px-4 animate-scale-in">` that is placed **below** the step header (`<div className="mb-5 animate-fade-in-up text-center px-4">`) inside the same `<main>`. The outer `<main>` has `className="flex-1 px-4 pb-8"`. Combined with the `animate-scale-in` animation, the card appears to sit at the natural flow position but the `animate-scale-in` keyframe animation starting at `scale(0.95)` can make it look like it's positioned lower than expected. The real issue is likely that `main` uses `flex-1` which stretches it, and the card has no explicit vertical alignment.
 
-#### 3. Step Direction Animations (Framer Motion)
-- Track `direction` state: `1` (forward) or `-1` (backward)
-- `motion.div` variants: `x: direction * 40 → 0` for enter, `x: 0 → direction * -40` for exit
-- Forward nav (Continue button): slide in from right
-- Backward nav (Back button): slide in from left
-- Need `framer-motion` installed — check package.json
+### Step 3 Layout (Reference — GOOD)
+Step 3 uses `className="max-w-2xl mx-auto"` on the wrapper div (inside `<main>`), and that wrapper contains a `<div className="card p-6 sm:p-8 animate-scale-in">`. This works because it's directly inside `<main className="flex-1 ...">` without extra nesting.
 
-#### 4. Live Running Price on Step 1
-- Sticky price counter top-right of the PageSelector card grid
-- Shows running total as pages are selected
-- Format: `£{total}` with small "running total" label
-- Updates reactively as selected pages change
+### Step 4 Layout (BAD)
+`SupportPlanStep.tsx` wraps in its own `<div className="max-w-2xl mx-auto w-full px-4 animate-scale-in">` AND has an inner `MaintenancePlanSelector` with `className="max-w-2xl mx-auto"` again. Double-nesting centered divs + `animate-scale-in` animation can cause vertical centering or downward push.
 
-### Tier 2 — Top 3
+## Files to Modify
 
-#### 5. Two-Font System — Instrument Serif
-- Load `Instrument Serif` from Google Fonts in `layout.tsx`
-- Apply to: `<h1>` in header, `<h2>` step title, total price in QuoteSummary
-- Keep Inter for body/UI text
-- Fallback: `Georgia, serif`
+### 1. `src/app/page.tsx` — SPLIT NEEDED
+**Problem:** 228 lines (exceeds 200 limit)
+**Solution:** Extract each step's content rendering into a separate component file. Keep `Home` as the orchestrator (~150 lines) and move step content into named step-content components.
 
-#### 6. Floating Form Labels — InquiryForm
-- All form fields (Name, Email, Coupon) get floating label pattern
-- Label sits over the input as placeholder
-- On focus OR when field has value: label animates up to top-left
-- CSS transition: `transform`, `font-size`, `color`
-- Use `peer` / `peer-focus` pattern in Tailwind (or CSS)
+Create:
+- `src/components/steps/Step1Content.tsx` — MigrationToggle
+- `src/components/steps/Step2Content.tsx` — BuilderPhase wrapper
+- `src/components/steps/Step3Content.tsx` — QuoteReviewPanel
+- `src/components/steps/Step4Content.tsx` — SupportPlanStep
+- `src/components/steps/Step5Content.tsx` — (FormPanel is controlled externally)
+- `src/components/steps/Step6Content.tsx` — FinalConfirmation
 
-#### 7. Mobile Card Grouping — PageSelector
-- Group pages into 3 collapsible categories:
-  - **Core:** Home, About, Services, Contact
-  - **Marketing:** Gallery, Testimonials, Team, FAQ
-  - **Utility:** Pricing, Blog
-- Each category is a collapsible `<details>`/`<summary>` or custom accordion
-- Show count badge per category
-- Mobile-only collapse (hide on desktop via `hidden sm:block`)
+### 2. `src/components/SupportPlanStep.tsx` — LAYOUT FIX
+**Changes:**
+- Remove `animate-scale-in` from the outer wrapper (it conflicts with AnimatePresence motion.div)
+- Change outer wrapper from `max-w-2xl mx-auto w-full px-4 animate-scale-in` to `max-w-xl mx-auto`
+- Remove duplicate `max-w-2xl mx-auto` from the inner `MaintenancePlanSelector` wrapper
+- Move `animate-scale-in` only to the `.card` element inside MaintenancePlanSelector
 
----
+### 3. `src/components/MaintenancePlanSelector.tsx` — LAYOUT FIX
+**Changes:**
+- Outer wrapper: change from `max-w-2xl mx-auto` to nothing (handled by parent SupportPlanStep)
+- Card div: keep `card p-6 sm:p-8 animate-scale-in`
+- Ensure no `max-w-*` on wrapper divs that would create double-nesting
 
-## File Changes
+### 4. `src/components/BuilderPhase.tsx` — LAYOUT FIX
+**Changes:**
+- Outer wrapper: `max-w-5xl mx-auto` (already has it via `builder-layout-wrapper`)
+- `.card` wrapper: already has `card p-6 sm:p-8 animate-scale-in` — good
 
-| File | Change |
-|------|--------|
-| `src/app/layout.tsx` | Add Instrument Serif Google Font |
-| `src/app/globals.css` | Add price-hero glow, gradient text, floating label styles |
-| `src/app/page.tsx` | Direction state, direction-aware step transitions, live price on Step 1 |
-| `src/components/PageSelector.tsx` | Left-border accent, mobile grouping, live price display |
-| `src/components/FeatureSelector.tsx` | Left-border accent on selected |
-| `src/components/QuoteSummary.tsx` | Hero price display (4xl+, glow, gradient) |
-| `src/components/InquiryForm.tsx` | Floating labels on all fields |
-| `src/hooks/useDirection.ts` | New hook: tracks nav direction (1 / -1) |
+### 5. `src/app/globals.css` — MINOR ADJUSTMENTS
+**Changes:**
+- Ensure `.animate-scale-in` starts at `opacity: 0, scale: 0.96` (slightly less aggressive than 0.95)
 
----
+## Layout Consistency Rules
+
+All steps should follow this pattern:
+```
+<main flex-1>
+  <step-content-wrapper max-w-[sm|xl|2xl] mx-auto>
+    <div className="card p-6 sm:p-8 animate-scale-in">
+      CONTENT
+    </div>
+  </step-content-wrapper>
+</main>
+```
+
+No step content wrapper should have:
+- `animate-scale-in` AND `max-w-* mx-auto` simultaneously (causes double-animation)
+- Vertical alignment that stretches content to fill viewport
 
 ## Acceptance Criteria
 
-- [ ] Price on Step 3/4: `text-5xl`, bold, white, amber glow, gradient number
-- [ ] Selected cards: `border-l-4 border-[#818cf8]` (no full border ring)
-- [ ] Forward nav: slide from right. Backward: slide from left
-- [ ] Step 1 shows live running price top-right of grid
-- [ ] Instrument Serif on H1 + price; Inter on body
-- [ ] All InquiryForm fields have floating labels
-- [ ] Mobile: pages grouped into 3 collapsible categories
-- [ ] `pnpm run lint` → 0 errors
-- [ ] `pnpm run typecheck` → 0 errors
-- [ ] `pnpm run build` → succeeds
-
----
-
-## Tech Notes
-- Framer Motion: check if installed, install if not (`framer-motion` package)
-- Tailwind CSS v4 (used with `@theme inline` — no `tailwind.config.js`)
-- CSS variables already in `globals.css`
-- Google Fonts: load in `<head>` of `layout.tsx`
+1. `page.tsx` < 200 lines after refactor
+2. All 6 steps render with comfortable, consistent vertical spacing
+3. Step 4 cards sit naturally below the header (no excessive top whitespace)
+4. `pnpm lint` → 0 errors
+5. `pnpm typecheck` → 0 errors
+6. `pnpm build` → succeeds
+7. `pnpm test` → all pass
+8. No file > 200 lines

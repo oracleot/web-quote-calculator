@@ -67,18 +67,18 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
   return (
     <div>
       <div className="flex items-center gap-3 mb-5 px-1">
-        <div className="flex items-center gap-1.5 text-xs text-[#64748b]">
+        <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
           All add-ons are optional
         </div>
-        <div className="ml-auto text-xs text-[#818cf8] bg-[rgba(129,140,248,0.1)] border border-[rgba(129,140,248,0.2)] rounded-full px-2.5 py-0.5 font-medium">
+        <div className="ml-auto text-xs text-[var(--accent)] bg-[var(--accent-muted)] border border-[rgba(34,211,238,0.2)] rounded-full px-2.5 py-0.5 font-medium">
           {selected.length} selected
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 stagger-children">
+      <div className="grid gap-3 sm:grid-cols-2">
         {FEATURES.map((feature) => {
           const isSelected = selected.includes(feature.id);
           return (
@@ -87,7 +87,7 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
               onClick={() => toggleFeature(feature.id)}
               className={`select-card p-4 text-left ${isSelected ? 'selected' : ''}`}
             >
-              <div className="flex items-center gap-3 relative z-10">
+              <div className="flex items-center gap-3">
                 <div className={`checkbox flex-shrink-0 ${isSelected ? 'checked' : ''}`}>
                   {isSelected && (
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,14 +96,14 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
                   )}
                 </div>
 
-                <div className={`flex-shrink-0 ${isSelected ? 'text-[#818cf8]' : 'text-[#64748b]'}`}
-                     style={{ transition: 'color 0.2s' }}>
+                <div className={`flex-shrink-0 ${isSelected ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}
+                     style={{ transition: 'color 0.15s' }}>
                   {FEATURE_ICONS[feature.id]}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white text-sm leading-tight">{feature.label}</div>
-                  <div className="text-xs text-[#64748b] leading-tight mt-0.5">{feature.description}</div>
+                  <div className="font-medium text-[var(--text-primary)] text-sm leading-tight">{feature.label}</div>
+                  <div className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">{feature.description}</div>
                 </div>
 
                 <div className={`price-tag flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg ${isSelected ? '' : 'opacity-60'}`}>

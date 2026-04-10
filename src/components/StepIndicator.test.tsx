@@ -4,9 +4,9 @@ import StepIndicator from './StepIndicator';
 
 describe('StepIndicator', () => {
   it('renders correct number of steps', () => {
-    render(<StepIndicator currentStep={1} totalSteps={4} />);
-    const steps = screen.getAllByText(/\d/);
-    expect(steps.length).toBeGreaterThanOrEqual(4);
+    const { container } = render(<StepIndicator currentStep={1} totalSteps={4} />);
+    const steps = container.querySelectorAll('.step-label');
+    expect(steps).toHaveLength(4);
   });
 
   it('renders step labels', () => {
