@@ -1,79 +1,119 @@
-# SPEC.md — Web Quote Calculator: Migration Track + Maintenance Tiers
+# SPEC.md — Web Quote Calculator: Maintenance Step + Migration Fix
 
 ## What
 
-Two features added to the Web Quote Calculator:
+Two targeted changes to the web quote calculator:
 
-1. **Migration Track (Step 0)** — A "New website" vs "Migrate existing website" toggle above the StepIndicator on Step 1. Migration adds a flat £100 fee.
-2. **Maintenance Tiers** — Three tier cards shown on the success screen after inquiry submission, clearly labelled "Optional".
+1. **Migration track default fix**: When `isMigration === true`, the `selectedPages` state starts as `[]` instead of `['home']`, so migration clients can optionally add pages to their quote.
+2. **New Step 5 — Maintenance Plan Selection**: After a successful inquiry submission, the client is presented with a dedicated step to choose (or skip) a maintenance plan before seeing the final confirmation.
+
+---
 
 ## Tech
 
-- **Framework:** Next.js 15 + TypeScript
-- **Styling:** Tailwind CSS (dark mode, CSS variables)
-- **Animation:** Framer Motion (existing patterns)
-- **No new dependencies**
+- **Framework**: Next.js 15 (App Router), TypeScript, Tailwind CSS, Framer Motion
+- **Component style**: Dark mode cards, consistent with Steps 3–4 animation/transition style
+- **State**: `selectedMaintenancePlan` added to page.tsx: `'none' | 'basic' | 'standard'`
+- **Flow**: Inquiry success → Step 5 maintenance selection → final confirmation (with plan shown)
+- **No external dependencies** — reuse existing design tokens from globals.css
+
+---
 
 ## Files Affected
 
-### Modify
-- `src/lib/pricing.ts` — `calculateQuote()` accepts optional `isMigration: boolean`; adds £100 flat fee when true
-- `src/app/page.tsx` — add `isMigration: boolean` state; pass it to `calculateQuote()`; show `MigrationToggle` on Step 1; show `MaintenanceTiers` on success
+### New Files
+- `src/components/MaintenancePlanSelector.tsx` — Step 5 component (radio-card selection)
 
-### Create
-- `src/components/MigrationToggle.tsx` — Step 0 toggle cards (New website / Migrate existing)
-- `src/components/MaintenanceTiers.tsx` — Success screen tier cards (Basic £25/mo, Standard £40/mo)
+### Modified Files
+- `src/app/page.tsx` — TOTAL_STEPS = 5, Step 5 flow, empty pages for migration, step indicator updates
+- `src/components/StepIndicator.tsx` — STEP_LABELS needs to cover 5 steps (will need to be passed in or label changed)
 
-## Pricing Logic
+---
 
-```typescript
-// src/lib/pricing.ts
-export function calculateQuote(
-  selectedPageIds: string[],
-  selectedFeatureIds: string[],
-  options?: { isMigration?: boolean }
-)
-// Returns { ..., migrationFee: 100 } when isMigration === true
-// Total = base + pages + features + (isMigration ? 100 : 0)
+## Issue 1 — Migration Empty Pages
+
+### Change
+In `src/app/page.tsx`, update the `selectedPages` initial state:
+
+```ts
+// Before
+const [selectedPages, setSelectedPages] = useState<string[]>(['home']);
+
+// After
+const [selectedPages, setSelectedPages] = useState<string[]>(isMigration ? [] : ['home']);
 ```
 
-## MigrationToggle UI
+**Note**: `isMigration` is `false` by default, so this is a conditional initialization — `useState` only uses the initial value on mount. This is intentional: the client can toggle migration off/on and pages state must be preserved.
 
-- Two clickable cards side by side (desktop) / segmented control (mobile)
-- Default: "New website" selected
-- "Migrate existing website" card shows a note: "Includes full site audit, content transfer, and redirect setup (+£100)"
-- Selected state: indigo background matching the one-page/multi-page toggle style
-- Appears above `StepIndicator` on Step 1 only (steps 2–4 don't show it)
+### Also update `canProceed`
+The `canProceed` guard already checks `step !== 1 || selectedPages.length > 0`. No change needed — it will now let migration clients proceed to step 2 even with 0 pages selected.
 
-## MaintenanceTiers UI
+---
 
-- Shown in `InquiryForm` when `isSuccess === true`, BEFORE or alongside the success message
-- **"Optional"** label prominently at top
-- Section heading: "Keep your site healthy"
-- Two tier cards (Basic / Standard):
-  - Basic £25/mo: hosting, 2 bi-weekly health checks with reports, £10/hr extra work
-  - Standard £40/mo: hosting, AI assistant on WhatsApp for anytime updates, £7/hr complex features
-- "New website" builds (isMigration === false): "3 months free" badge on Standard tier only
-- Below tiers: "Not ready yet? No problem — reach out anytime"
-- No buttons needed — informational display only
-- Cards match existing dark card design system (border, bg, hover)
+## Issue 2 — Step 5: Maintenance Plan Selection
+
+### Flow
+
+```
+Step 4 (FormPanel) on submit → isSuccess = true
+  → If isSuccess && step === 4: show Step 5 (MaintenancePlanSelector)
+  → Client selects plan or clicks "Skip"
+  → Continue → step = 5 (final confirmation shown)
+```
+
+### New State in page.tsx
+```ts
+const [selectedMaintenancePlan, setSelectedMaintenancePlan] = useState<'none' | 'basic' | 'standard'>('none');
+```
+
+### Step Indicator Updates
+- `TOTAL_STEPS = 5` (was 4)
+- STEP_TITLES gains a 5th entry: `{ title: 'Choose a Support Plan', sub: 'Optional ongoing maintenance for your new site' }`
+- STEP_LABELS in StepIndicator needs to add `'Plan'` as the 5th label
+
+### MaintenancePlanSelector Component
+
+**Layout**: Full-width centered, matching Step 3/4 card style — `card p-6 sm:p-8 animate-scale-in` wrapper, `max-w-2xl mx-auto`.
+
+**Three options** (radio-card style, single-select):
+
+| Plan | Price | Features | Badge |
+|------|-------|----------|-------|
+| "No thanks, I'll handle updates myself" | Free | — | — |
+| Basic | £25/mo | Hosting, 2 bi-weekly health checks, £10/hr extra work | — |
+| Standard | £40/mo | Hosting, AI WhatsApp assistant, £7/hr complex features | "3 months free" (only when `isMigration === false`) |
+
+**UI Details**:
+- Single-select radio cards — clicking one deselects others
+- Selected card: highlighted border (like `select-card.selected`) and background tint
+- "Continue" button confirms selection and advances to step 5
+- "Skip" text link below the cards → `setSelectedMaintenancePlan('none')` and advances
+
+**Final Confirmation** (step === 5):
+- Reuse existing success UI from InquiryForm but append the selected plan info below it
+- Show: "No maintenance plan selected" OR "Basic (£25/mo)" OR "Standard (£40/mo) + 3 months free" (if applicable)
+
+### Props for MaintenancePlanSelector
+
+```ts
+interface MaintenancePlanSelectorProps {
+  selectedPlan: 'none' | 'basic' | 'standard';
+  onSelectPlan: (plan: 'none' | 'basic' | 'standard') => void;
+  isMigration: boolean;
+  onContinue: () => void;
+  onSkip: () => void;
+}
+```
+
+---
 
 ## Acceptance Criteria
 
-1. Step 0 toggle is visible above StepIndicator on step 1
-2. Selecting "Migrate" adds £100 to the live total shown in sidebar and bottom bar
-3. Migration flag persists through all steps and is passed to the inquiry API
-4. Maintenance tiers section appears on the success screen, clearly marked "Optional"
-5. "3 months free" badge only shows when `isMigration === false` (new build)
-6. All existing steps 1–4 work exactly as before — no regression
-7. `pnpm lint && pnpm typecheck && pnpm build` all pass
-8. No file exceeds 200 lines
-
-## File Size Budget
-
-| File | Max Lines |
-|------|-----------|
-| src/components/MigrationToggle.tsx | 120 |
-| src/components/MaintenanceTiers.tsx | 120 |
-| src/lib/pricing.ts | 50 |
-| src/app/page.tsx | 200 |
+1. `isMigration === true` → `selectedPages` initializes as `[]` (client can proceed with 0 pages)
+2. After inquiry submit → Step 5 appears with three plan cards
+3. "3 months free" badge visible on Standard only when `isMigration === false`
+4. Client can skip (go straight to confirmation) or select a plan
+5. Selected plan (or "No plan") shown in final confirmation
+6. Step indicator correctly shows 5 steps
+7. `pnpm lint && pnpm typecheck && pnpm build` → 0 errors, build succeeds
+8. No source file > 200 lines (split if needed)

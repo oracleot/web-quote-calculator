@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StepIndicator from '@/components/StepIndicator';
 import BuilderPhase from '@/components/BuilderPhase';
@@ -8,18 +8,22 @@ import QuoteReviewPanel from '@/components/QuoteReviewPanel';
 import FormPanel from '@/components/FormPanel';
 import MigrationToggle from '@/components/MigrationToggle';
 import SelectionBottomBar from '@/components/SelectionBottomBar';
+import MaintenancePlanSelector from '@/components/MaintenancePlanSelector';
+import FinalConfirmation from '@/components/FinalConfirmation';
 import { calculateQuote } from '@/lib/pricing';
 import { useDirection } from '@/hooks/useDirection';
 import { useSelectionList } from '@/hooks/useSelectionList';
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 const EMPTY_IDS: string[] = Object.freeze([]) as unknown as string[];
 const STEP_TITLES = [
   { title: 'Choose Your Pages', sub: 'Select the pages your website needs' },
   { title: 'Add Extra Features', sub: 'Optional add-ons for advanced functionality' },
   { title: 'Review Your Quote', sub: 'Your estimated project cost at a glance' },
   { title: 'Submit Your Inquiry', sub: 'Get in touch to kick things off' },
+  { title: 'Choose a Support Plan', sub: 'Optional ongoing maintenance for your new site' },
 ];
+const STEP_LABELS = ['Pages', 'Features', 'Review', 'Submit', 'Plan'];
 type CouponStatus = 'idle' | 'valid' | 'invalid' | 'error';
 
 export default function Home() {
@@ -37,6 +41,12 @@ export default function Home() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showFormPanel, setShowFormPanel] = useState(false);
+  const [selectedMaintenancePlan, setSelectedMaintenancePlan] = useState<'none' | 'basic' | 'standard'>('none');
+
+  // When migration is toggled on, start with no pages pre-selected
+  useEffect(() => {
+    if (isMigration) setSelectedPages([]);
+  }, [isMigration]);
 
   const { direction, goNext, goPrev } = useDirection();
 
@@ -81,6 +91,7 @@ export default function Home() {
       });
       if (!res.ok) throw new Error('Failed to send inquiry');
       setIsSuccess(true);
+      setStep(5);
     } catch { setError('Something went wrong. Please try again.'); }
     finally { setIsSubmitting(false); }
   };
@@ -121,7 +132,7 @@ export default function Home() {
         )}
 
         <div className="px-4 mb-6 animate-fade-in">
-          <StepIndicator currentStep={step} totalSteps={TOTAL_STEPS} />
+          <StepIndicator currentStep={step} totalSteps={TOTAL_STEPS} labels={STEP_LABELS} />
         </div>
 
         <div className="mb-5 animate-fade-in-up text-center px-4">
@@ -187,6 +198,42 @@ export default function Home() {
         onNameChange={setClientName} onEmailChange={setClientEmail} onCouponChange={setCouponCode}
         onCouponValidate={handleCouponBlur} onSubmit={handleSubmit}
         isSubmitting={isSubmitting} isSuccess={isSuccess} error={error} />
+
+      {/* Step 5 — Maintenance Plan Selection */}
+      {step === 5 && (
+        <div className="max-w-2xl mx-auto w-full px-4">
+          <div className="card p-6 sm:p-8 animate-scale-in">
+            <AnimatePresence mode="wait" custom={direction.current}>
+              <motion.div key="step5" custom={direction.current} variants={getVariants(direction.current)}
+                initial="enter" animate="center" exit="exit"
+                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}>
+                <MaintenancePlanSelector
+                  selectedPlan={selectedMaintenancePlan}
+                  onSelectPlan={setSelectedMaintenancePlan}
+                  isMigration={isMigration}
+                  onContinue={() => setStep(6)}
+                  onSkip={() => { setSelectedMaintenancePlan('none'); setStep(6); }}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* Step 6 — Final Confirmation */}
+      {step === 6 && (
+        <div className="max-w-2xl mx-auto w-full px-4">
+          <div className="card p-6 sm:p-8 animate-scale-in">
+            <AnimatePresence mode="wait" custom={direction.current}>
+              <motion.div key="step6" custom={direction.current} variants={getVariants(direction.current)}
+                initial="enter" animate="center" exit="exit"
+                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}>
+                <FinalConfirmation selectedMaintenancePlan={selectedMaintenancePlan} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

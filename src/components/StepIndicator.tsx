@@ -3,11 +3,14 @@
 interface StepIndicatorProps {
   currentStep: number;
   totalSteps: number;
+  labels?: string[];
 }
 
-const STEP_LABELS = ['Pages', 'Features', 'Review', 'Submit'];
+const DEFAULT_LABELS = ['Pages', 'Features', 'Review', 'Submit'];
 
-export default function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
+export default function StepIndicator({ currentStep, totalSteps, labels }: StepIndicatorProps) {
+  const STEP_LABELS = labels ?? DEFAULT_LABELS;
+
   return (
     <div className="flex items-center justify-center">
       <div className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(30,33,48,0.8)] backdrop-blur-sm">
