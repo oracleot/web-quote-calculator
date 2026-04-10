@@ -75,7 +75,7 @@ export default function FormPanel({
           <motion.div
             key="form-panel-backdrop"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.6 }}
+            animate={{ opacity: 0.4 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             className="fixed inset-0 z-40 bg-black"

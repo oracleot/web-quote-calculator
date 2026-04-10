@@ -22,6 +22,7 @@ interface BuilderPhaseProps {
   onPrev: () => void;
   onNext: () => void;
   canContinue: boolean;
+  isMigration?: boolean;
 }
 
 const VARIANTS = (dir: 1 | -1) => ({
@@ -30,18 +31,12 @@ const VARIANTS = (dir: 1 | -1) => ({
   exit: { x: dir * -40, opacity: 0 },
 });
 
-const BACK_ICON = (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-  </svg>
-);
-
 export default function BuilderPhase({
   step, direction, selectedPages, setSelectedPages,
   selectedFeatures, setSelectedFeatures, siteType, setSiteType,
   livePrice, featureTotal,
   selectedPageItems, selectedFeatureItems,
-  onPrev, onNext, canContinue,
+  onPrev, onNext, canContinue, isMigration = false,
 }: BuilderPhaseProps) {
   return (
     <div className="builder-layout-wrapper max-w-5xl mx-auto">
@@ -51,7 +46,7 @@ export default function BuilderPhase({
             {step === 1 && (
               <motion.div key="step1" custom={direction.current} variants={VARIANTS(direction.current)}
                 initial="enter" animate="center" exit="exit"
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}>
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}>
                 <PageSelector selected={selectedPages} onChange={setSelectedPages}
                   siteType={siteType} onSiteTypeChange={setSiteType} livePrice={livePrice} />
               </motion.div>
@@ -59,27 +54,16 @@ export default function BuilderPhase({
             {step === 2 && (
               <motion.div key="step2" custom={direction.current} variants={VARIANTS(direction.current)}
                 initial="enter" animate="center" exit="exit"
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}>
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}>
                 <FeatureSelector selected={selectedFeatures} onChange={setSelectedFeatures} />
               </motion.div>
             )}
           </AnimatePresence>
-
-          <div className="flex items-center mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)]">
-            <button onClick={onPrev} disabled={step === 1} className="btn-secondary sm:flex hidden">
-              <span className="flex items-center gap-2">{BACK_ICON}Back</span>
-            </button>
-          </div>
-          <div className="flex items-center justify-between mt-0 sm:hidden">
-            <button onClick={onPrev} disabled={step === 1} className="btn-secondary">
-              <span className="flex items-center gap-2">{BACK_ICON}Back</span>
-            </button>
-          </div>
         </div>
 
         <BuilderSidebar step={step} selectedPages={selectedPageItems} selectedFeatures={selectedFeatureItems}
           livePrice={livePrice} featureTotal={featureTotal}
-          onContinue={onNext} canContinue={canContinue} />
+          onContinue={onNext} onBack={onPrev} canContinue={canContinue} isMigration={isMigration} />
       </div>
     </div>
   );

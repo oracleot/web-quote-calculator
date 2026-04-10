@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, email, selectedPageIds, selectedFeatureIds, siteType, couponCode, couponDiscount } = body;
+    const { name, email, selectedPageIds, selectedFeatureIds, siteType, isMigration, couponCode, couponDiscount } = body;
 
     // Validate required fields exist
     if (!name || !email || !selectedPageIds || !selectedFeatureIds || !siteType) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
     }
 
-    const quote = calculateQuote(selectedPageIds, selectedFeatureIds);
+    const quote = calculateQuote(selectedPageIds, selectedFeatureIds, { isMigration: !!isMigration });
 
     const selectedPages = PAGES.filter((p) => selectedPageIds.includes(p.id));
     const selectedFeatures = FEATURES.filter((f) => selectedFeatureIds.includes(f.id));
@@ -74,7 +74,7 @@ Client Details:
   Name: ${sanitizedName}
   Email: ${email}
 
-Website Type: ${siteType === 'one-page' ? 'One-Page Website' : 'Multi-Page Website'}
+Website Type: ${siteType === 'one-page' ? 'One-Page Website' : 'Multi-Page Website'}${isMigration ? ' (Migration)' : ''}
 
 Selected Pages:
 ${pageList}
@@ -85,7 +85,7 @@ ${featureList}
 Quote Breakdown:
   Base website: £${quote.basePrice}
   Extra pages (${quote.extraPages} × £50): £${quote.pagesCost}
-  Features: £${quote.featuresCost}
+  Features: £${quote.featuresCost}${isMigration ? `\n  Migration fee: £${quote.migrationFee}` : ''}
   ---------------------------------
   Subtotal: £${quote.total}
 `;

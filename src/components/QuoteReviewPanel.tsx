@@ -10,9 +10,10 @@ interface QuoteReviewPanelProps {
   couponDiscount: number | null;
   couponCode: string;
   originalTotal: number;
+  maintenancePlan: 'none' | 'basic' | 'standard';
   onEditPages: () => void;
   onEditFeatures: () => void;
-  onProceed: () => void;
+  onEditPlan: () => void;
 }
 
 export default function QuoteReviewPanel({
@@ -23,9 +24,10 @@ export default function QuoteReviewPanel({
   couponDiscount,
   couponCode,
   originalTotal,
+  maintenancePlan,
   onEditPages,
   onEditFeatures,
-  onProceed,
+  onEditPlan,
 }: QuoteReviewPanelProps) {
   return (
     <div className="w-full max-w-xl mx-auto">
@@ -50,6 +52,16 @@ export default function QuoteReviewPanel({
           </svg>
           Edit features
         </button>
+        <span className="text-[var(--text-muted)]">·</span>
+        <button
+          onClick={onEditPlan}
+          className="flex items-center gap-1.5 text-[var(--accent)] hover:underline transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Edit plan
+        </button>
       </div>
 
       {/* Quote summary */}
@@ -61,22 +73,8 @@ export default function QuoteReviewPanel({
         couponDiscount={couponDiscount}
         couponCode={couponCode || null}
         originalTotal={originalTotal}
+        maintenancePlan={maintenancePlan}
       />
-
-      {/* Proceed CTA */}
-      <div className="mt-6">
-        <button
-          onClick={onProceed}
-          className="btn-primary w-full py-3.5"
-        >
-          <span className="flex items-center justify-center gap-2">
-            Proceed to Submit
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
-        </button>
-      </div>
     </div>
   );
 }

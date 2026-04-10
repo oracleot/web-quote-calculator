@@ -2,24 +2,24 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import MaintenancePlanSelector from '@/components/MaintenancePlanSelector';
-import { useDirection } from '@/hooks/useDirection';
 
 interface SupportPlanStepProps {
   selectedMaintenancePlan: 'none' | 'basic' | 'standard';
   setSelectedMaintenancePlan: (plan: 'none' | 'basic' | 'standard') => void;
   isMigration: boolean;
-  setShowFormPanel: (v: boolean) => void;
-  setStep: (step: number) => void;
+  direction: React.MutableRefObject<1 | -1>;
+  onNext: () => void;
+  onBack: () => void;
 }
 
 export default function SupportPlanStep({
   selectedMaintenancePlan,
   setSelectedMaintenancePlan,
   isMigration,
-  setShowFormPanel,
-  setStep,
+  direction,
+  onNext,
+  onBack,
 }: SupportPlanStepProps) {
-  const { direction } = useDirection();
   const getVariants = (dir: 1 | -1) => ({
     enter: { x: dir * 40, opacity: 0 },
     center: { x: 0, opacity: 1 },
@@ -27,7 +27,7 @@ export default function SupportPlanStep({
   });
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-2xl mx-auto w-full animate-scale-in">
       <AnimatePresence mode="wait" custom={direction.current}>
         <motion.div
           key="step4"
@@ -42,14 +42,8 @@ export default function SupportPlanStep({
             selectedPlan={selectedMaintenancePlan}
             onSelectPlan={setSelectedMaintenancePlan}
             isMigration={isMigration}
-            onContinue={() => {
-              setShowFormPanel(true);
-              setStep(5);
-            }}
-            onSkip={() => {
-              setSelectedMaintenancePlan('none');
-              setStep(6);
-            }}
+            onContinue={onNext}
+            onBack={onBack}
           />
         </motion.div>
       </AnimatePresence>

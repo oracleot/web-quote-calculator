@@ -10,7 +10,10 @@ interface SelectionBottomBarProps {
   livePrice: number;
   featureTotal: number;
   onContinue: () => void;
+  onBack: () => void;
+  step: number;
   canContinue: boolean;
+  isMigration?: boolean;
 }
 
 export default function SelectionBottomBar({
@@ -19,7 +22,10 @@ export default function SelectionBottomBar({
   livePrice,
   featureTotal,
   onContinue,
+  onBack,
+  step,
   canContinue,
+  isMigration = false,
 }: SelectionBottomBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   // livePrice already includes migration fee when isMigration=true — no double-counting
@@ -55,16 +61,28 @@ export default function SelectionBottomBar({
     <>
       {/* Bottom bar — mobile only */}
       <div className="builder-bottom-bar sm:hidden">
+        {step > 1 && (
+          <button
+            onClick={onBack}
+            className="btn-secondary px-3 py-2.5 text-sm flex-shrink-0"
+            aria-label="Go back"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+
         <button
           ref={triggerRef}
           className="flex-1 flex items-center gap-2 min-w-0"
           onClick={() => setSheetOpen(true)}
           aria-label="View selection details"
         >
-          <span className="text-base font-extrabold text-white font-display">£{total}</span>
+          <span className="text-base font-bold text-[var(--text-primary)] font-mono">£{total}</span>
           <span className="text-xs text-[var(--text-muted)]">·</span>
           <span className="text-xs text-[var(--text-secondary)] truncate">
-            {pageCount} {pageCount === 1 ? 'page' : 'pages'}
+            {isMigration ? 'Migration' : `${pageCount} ${pageCount === 1 ? 'page' : 'pages'}`}
             {selectedFeatures.length > 0 ? `, ${selectedFeatures.length} feature${selectedFeatures.length > 1 ? 's' : ''}` : ''}
           </span>
           <svg className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,7 +114,7 @@ export default function SelectionBottomBar({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.15 }}
               className="fixed inset-0 z-40 bg-black/60 sm:hidden"
               onClick={() => setSheetOpen(false)}
             />
@@ -111,7 +129,7 @@ export default function SelectionBottomBar({
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
               className="fixed bottom-0 left-0 right-0 z-50 sm:hidden rounded-t-2xl"
               style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)' }}
             >
@@ -136,20 +154,29 @@ export default function SelectionBottomBar({
 
                 {/* Selection list */}
                 <div className="space-y-2 max-h-60 overflow-y-auto mb-5">
-                  {allItems.length === 0 ? (
+                  {isMigration && (
+                    <div className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent-muted)]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-[var(--accent)] text-[10px] flex-shrink-0">&#8644;</span>
+                        <span className="text-xs text-[var(--text-secondary)] truncate">Existing site migration</span>
+                      </div>
+                      <span className="text-xs text-[var(--accent)] font-medium font-mono flex-shrink-0">£100</span>
+                    </div>
+                  )}
+                  {allItems.length === 0 && !isMigration ? (
                     <p className="text-xs text-[var(--text-muted)] py-2">No items selected yet</p>
                   ) : (
                     allItems.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg bg-[rgba(129,140,248,0.05)] border border-[rgba(129,140,248,0.1)]"
+                        className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent-muted)]"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="text-[var(--accent)] text-[10px] flex-shrink-0">✓</span>
                           <span className="text-xs text-[var(--text-secondary)] truncate">{item.label}</span>
                         </div>
                         {item.type === 'feature' && item.price > 0 && (
-                          <span className="text-xs text-[var(--accent)] font-medium flex-shrink-0">
+                          <span className="text-xs text-[var(--accent)] font-medium font-mono flex-shrink-0">
                             £{item.price}
                           </span>
                         )}
@@ -164,8 +191,8 @@ export default function SelectionBottomBar({
                     Total
                   </span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-sm text-[var(--text-muted)]">£</span>
-                    <span className="text-2xl font-extrabold text-white font-display">{total}</span>
+                    <span className="text-sm text-[var(--text-muted)] font-mono">£</span>
+                    <span className="text-2xl font-bold text-[var(--text-primary)] font-mono">{total}</span>
                   </div>
                 </div>
 

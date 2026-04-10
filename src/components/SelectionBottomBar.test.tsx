@@ -13,6 +13,8 @@ const defaultProps = {
   livePrice: 0,
   featureTotal: 50,
   onContinue: vi.fn(),
+  onBack: vi.fn(),
+  step: 1,
   canContinue: true,
 };
 
