@@ -36,8 +36,9 @@ export function calculateQuote(
 ) {
   const pageCount = selectedPageIds.length;
 
-  // Flat base price of £250
-  const basePrice = BASE_PRICE;
+  // Base price (£250) applies to new builds OR migrations that include pages
+  // For migration with 0 pages: only migration fee applies (content transfer included)
+  const basePrice = options?.isMigration && selectedPageIds.length === 0 ? 0 : BASE_PRICE;
 
   // Extra pages beyond the 4 included
   const extraPages = pageCount > PAGES_INCLUDED ? pageCount - PAGES_INCLUDED : 0;
