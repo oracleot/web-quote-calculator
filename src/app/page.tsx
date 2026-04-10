@@ -198,8 +198,8 @@ export default function Home() {
         onCouponValidate={handleCouponBlur} onSubmit={handleSubmit}
         isSubmitting={isSubmitting} isSuccess={isSuccess} error={error} />
 
-      {/* Step 5 — Maintenance Plan Selection */}
-      {step === 5 && (
+      {/* Step 4 — Maintenance Plan Selection */}
+      {step === 4 && (
         <div className="max-w-2xl mx-auto w-full px-4">
           <div className="card p-6 sm:p-8 animate-scale-in">
             <AnimatePresence mode="wait" custom={direction.current}>
