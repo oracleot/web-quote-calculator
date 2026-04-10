@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import StepIndicator from '@/components/StepIndicator';
 import BuilderPhase from '@/components/BuilderPhase';
-import QuoteReviewPanel from '@/components/QuoteReviewPanel';
 import FormPanel from '@/components/FormPanel';
 import MigrationToggle from '@/components/MigrationToggle';
 import SelectionBottomBar from '@/components/SelectionBottomBar';
-import FinalConfirmation from '@/components/FinalConfirmation';
 import SupportPlanStep from '@/components/SupportPlanStep';
+import Step3Content from '@/components/steps/Step3Content';
+import Step6Content from '@/components/steps/Step6Content';
 import { calculateQuote } from '@/lib/pricing';
 import { useDirection } from '@/hooks/useDirection';
 import { useSelectionList } from '@/hooks/useSelectionList';
@@ -44,8 +43,6 @@ export default function Home() {
   const [showFormPanel, setShowFormPanel] = useState(false);
   const [selectedMaintenancePlan, setSelectedMaintenancePlan] = useState<'none' | 'basic' | 'standard'>('none');
 
-  // Migration pages are reset synchronously in the MigrationToggle onChange handler
-
   const { direction, goNext, goPrev } = useDirection();
 
   const livePrice = useMemo(() => calculateQuote(selectedPages, [], { isMigration }).total, [selectedPages, isMigration]);
@@ -54,11 +51,8 @@ export default function Home() {
     () => calculateQuote(selectedPages, selectedFeatures, { isMigration }),
     [selectedPages, selectedFeatures, isMigration]
   );
-
-
   const selectedPageItems = useSelectionList(selectedPages, EMPTY_IDS);
   const selectedFeatureItems = useSelectionList(EMPTY_IDS, selectedFeatures);
-  // Migration allows 0 pages on step 1; new builds require at least one page
   const canProceed = () => step !== 1 || isMigration || selectedPages.length > 0;
 
   const handleCouponBlur = async () => {
@@ -95,9 +89,6 @@ export default function Home() {
     finally { setIsSubmitting(false); }
   };
 
-  const getVariants = (dir: 1 | -1) => ({
-    enter: { x: dir * 40, opacity: 0 }, center: { x: 0, opacity: 1 }, exit: { x: dir * -40, opacity: 0 },
-  });
   const handleNext = () => { goNext(); setStep((s) => s + 1); };
   const handlePrev = () => { goPrev(); setStep((s) => Math.max(1, s - 1)); };
   const isBuilderPhase = step === 1 || step === 2;
@@ -151,32 +142,38 @@ export default function Home() {
           )}
 
           {step === 3 && (
-            <div className="max-w-2xl mx-auto">
-              <div className="card p-6 sm:p-8 animate-scale-in">
-                <AnimatePresence mode="wait" custom={direction.current}>
-                  <motion.div key="step3" custom={direction.current} variants={getVariants(direction.current)}
-                    initial="enter" animate="center" exit="exit"
-                    transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}>
-                    <QuoteReviewPanel selectedPageIds={selectedPages} selectedFeatureIds={selectedFeatures}
-                      siteType={siteType} isMigration={isMigration}
-                      couponDiscount={couponStatus === 'valid' ? couponDiscount : null}
-                      couponCode={couponStatus === 'valid' ? couponCode : ''} originalTotal={quote.total}
-                      onEditPages={() => { goPrev(); setStep(1); }} onEditFeatures={() => { goPrev(); setStep(2); }}
-                      onProceed={() => setStep(4)} />
-                  </motion.div>
-                </AnimatePresence>
-                <div className="flex items-center mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)]">
-                  <button onClick={handlePrev} className="btn-secondary">
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Back
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <Step3Content
+              direction={direction}
+              selectedPages={selectedPages}
+              selectedFeatures={selectedFeatures}
+              siteType={siteType}
+              isMigration={isMigration}
+              couponStatus={couponStatus}
+              couponDiscount={couponDiscount}
+              couponCode={couponCode}
+              originalTotal={quote.total}
+              onEditPages={() => { goPrev(); setStep(1); }}
+              onEditFeatures={() => { goPrev(); setStep(2); }}
+              onProceed={() => setStep(4)}
+              onPrev={handlePrev}
+            />
+          )}
+
+          {step === 4 && (
+            <SupportPlanStep
+              selectedMaintenancePlan={selectedMaintenancePlan}
+              setSelectedMaintenancePlan={setSelectedMaintenancePlan}
+              isMigration={isMigration}
+              setShowFormPanel={setShowFormPanel}
+              setStep={setStep}
+            />
+          )}
+
+          {step === 6 && (
+            <Step6Content
+              direction={direction}
+              selectedMaintenancePlan={selectedMaintenancePlan}
+            />
           )}
         </main>
 
@@ -197,32 +194,6 @@ export default function Home() {
         onNameChange={setClientName} onEmailChange={setClientEmail} onCouponChange={setCouponCode}
         onCouponValidate={handleCouponBlur} onSubmit={handleSubmit}
         isSubmitting={isSubmitting} isSuccess={isSuccess} error={error} />
-
-      {/* Step 4 — Maintenance Plan Selection */}
-      {step === 4 && (
-        <SupportPlanStep
-          selectedMaintenancePlan={selectedMaintenancePlan}
-          setSelectedMaintenancePlan={setSelectedMaintenancePlan}
-          isMigration={isMigration}
-          setShowFormPanel={setShowFormPanel}
-          setStep={setStep}
-        />
-      )}
-
-      {/* Step 6 — Final Confirmation */}
-      {step === 6 && (
-        <div className="max-w-2xl mx-auto w-full px-4">
-          <div className="card p-6 sm:p-8 animate-scale-in">
-            <AnimatePresence mode="wait" custom={direction.current}>
-              <motion.div key="step6" custom={direction.current} variants={getVariants(direction.current)}
-                initial="enter" animate="center" exit="exit"
-                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}>
-                <FinalConfirmation selectedMaintenancePlan={selectedMaintenancePlan} />
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

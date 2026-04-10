@@ -53,8 +53,7 @@ export default function MaintenancePlanSelector({
   onSkip,
 }: MaintenancePlanSelectorProps) {
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="card p-6 sm:p-8 animate-scale-in">
+    <div className="card p-6 sm:p-8 animate-scale-in">
         {/* Plan cards */}
         <div className="space-y-3 mb-6">
           {PLANS.map((plan) => {
@@ -128,7 +127,6 @@ export default function MaintenancePlanSelector({
             Skip for now
           </button>
         </div>
-      </div>
     </div>
   );
 }

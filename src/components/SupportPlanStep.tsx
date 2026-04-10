@@ -27,7 +27,7 @@ export default function SupportPlanStep({
   });
 
   return (
-    <div className="max-w-2xl mx-auto w-full px-4 animate-scale-in">
+    <div className="max-w-xl mx-auto">
       <AnimatePresence mode="wait" custom={direction.current}>
         <motion.div
           key="step4"
