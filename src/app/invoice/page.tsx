@@ -126,26 +126,37 @@ function InvoicePageInner() {
 
   return (
     <>
-      {/* Print styles — only the preview is printed, no duplicate page */}
+      {/* Print styles — only the preview wrapper is printed */}
       <style>{`
-        @page { margin: 10mm; size: A4; }
+        @page { margin: 0; size: A4; }
+        #invoice-preview-wrapper { display: none; }
         @media print {
+          html, body { margin: 0 !important; padding: 0 !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
           body > * { display: none !important; }
-          #invoice-preview-wrapper { display: block !important; }
+          #invoice-preview-wrapper {
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+          }
           #invoice-preview {
             width: 100% !important;
-            max-width: 210mm !important;
-            margin: 0 auto !important;
-            padding: 15mm !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 10mm 15mm !important;
             border-radius: 0 !important;
             box-shadow: none !important;
             background: white !important;
             color: #09090b !important;
+            min-height: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+            page-break-after: avoid !important;
           }
-        }
-        #invoice-preview-wrapper { display: none; }
-        @media print {
-          #invoice-preview-wrapper { display: block !important; }
         }
       `}</style>
 
