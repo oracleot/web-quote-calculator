@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import QuoteReviewPanel from '@/components/QuoteReviewPanel';
 
 interface Step3ContentProps {
@@ -72,7 +73,7 @@ export default function Step3Content({
             />
           </motion.div>
         </AnimatePresence>
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--border)]">
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--border)] gap-2 flex-wrap">
           <button onClick={onPrev} className="btn-secondary">
             <span className="flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,14 +82,33 @@ export default function Step3Content({
               Back
             </span>
           </button>
-          <button onClick={onProceed} className="btn-primary px-6 py-2.5">
-            <span className="flex items-center gap-2">
-              Continue
+          <div className="flex items-center gap-2">
+            <Link
+              href={(() => {
+                const params = new URLSearchParams();
+                params.set('from', 'quote');
+                if (selectedPages.length > 0) params.set('pages', selectedPages.join(','));
+                if (selectedFeatures.length > 0) params.set('features', selectedFeatures.join(','));
+                if (isMigration) params.set('migration', 'true');
+                if (maintenancePlan !== 'none') params.set('maintenance', maintenancePlan);
+                return `/invoice?${params.toString()}`;
+              })()}
+              className="btn-secondary inline-flex items-center gap-2 px-4 py-2.5 text-sm"
+            >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-            </span>
-          </button>
+              Generate Invoice
+            </Link>
+            <button onClick={onProceed} className="btn-primary px-6 py-2.5">
+              <span className="flex items-center gap-2">
+                Continue
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

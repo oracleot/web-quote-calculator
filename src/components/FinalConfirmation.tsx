@@ -1,16 +1,36 @@
 'use client';
 
+import Link from 'next/link';
+
 interface FinalConfirmationProps {
   selectedMaintenancePlan: 'none' | 'basic' | 'standard';
+  selectedPages?: string[];
+  selectedFeatures?: string[];
+  isMigration?: boolean;
 }
 
-export default function FinalConfirmation({ selectedMaintenancePlan }: FinalConfirmationProps) {
+export default function FinalConfirmation({
+  selectedMaintenancePlan,
+  selectedPages = [],
+  selectedFeatures = [],
+  isMigration = false,
+}: FinalConfirmationProps) {
   const planLabel =
     selectedMaintenancePlan === 'none'
       ? null
       : selectedMaintenancePlan === 'basic'
         ? 'Basic (£25/mo)'
         : 'Standard (£40/mo)';
+
+  const invoiceHref = (() => {
+    const params = new URLSearchParams();
+    params.set('from', 'quote');
+    if (selectedPages.length > 0) params.set('pages', selectedPages.join(','));
+    if (selectedFeatures.length > 0) params.set('features', selectedFeatures.join(','));
+    if (isMigration) params.set('migration', 'true');
+    if (selectedMaintenancePlan !== 'none') params.set('maintenance', selectedMaintenancePlan);
+    return `/invoice?${params.toString()}`;
+  })();
 
   return (
     <div className="text-center py-6 space-y-5">
@@ -44,6 +64,18 @@ export default function FinalConfirmation({ selectedMaintenancePlan }: FinalConf
       ) : (
         <div className="text-xs text-[var(--text-muted)]">No maintenance plan selected — reach out anytime.</div>
       )}
+
+      <div className="pt-2">
+        <Link
+          href={invoiceHref}
+          className="inline-flex items-center gap-2 btn-secondary text-sm px-5 py-2.5"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Generate Invoice
+        </Link>
+      </div>
     </div>
   );
 }

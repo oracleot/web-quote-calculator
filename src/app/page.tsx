@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import StepIndicator from '@/components/StepIndicator';
 import BuilderPhase from '@/components/BuilderPhase';
 import QuoteSummary from '@/components/QuoteSummary';
@@ -193,12 +194,21 @@ export default function Home() {
             <Step6Content
               direction={direction}
               selectedMaintenancePlan={selectedMaintenancePlan}
+              selectedPages={selectedPages}
+              selectedFeatures={selectedFeatures}
+              isMigration={isMigration}
             />
           )}
         </main>
 
         <footer className="px-4 pb-8 text-center">
           <p className="text-xs text-[var(--text-muted)]">All quotes are estimates. Final pricing may vary based on project specifics.</p>
+          <p className="text-xs text-[var(--text-muted)] mt-2">
+            Need to bill a client?{' '}
+            <Link href="/invoice" className="text-[var(--accent)] hover:underline">
+              Open Invoice Generator →
+            </Link>
+          </p>
         </footer>
       </div>
 

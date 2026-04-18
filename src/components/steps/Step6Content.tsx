@@ -6,6 +6,9 @@ import FinalConfirmation from '@/components/FinalConfirmation';
 interface Step6ContentProps {
   direction: React.MutableRefObject<1 | -1>;
   selectedMaintenancePlan: 'none' | 'basic' | 'standard';
+  selectedPages?: string[];
+  selectedFeatures?: string[];
+  isMigration?: boolean;
 }
 
 const getVariants = (dir: 1 | -1) => ({
@@ -14,7 +17,7 @@ const getVariants = (dir: 1 | -1) => ({
   exit: { x: dir * -40, opacity: 0 },
 });
 
-export default function Step6Content({ direction, selectedMaintenancePlan }: Step6ContentProps) {
+export default function Step6Content({ direction, selectedMaintenancePlan, selectedPages, selectedFeatures, isMigration }: Step6ContentProps) {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="card p-6 sm:p-8 animate-scale-in">
@@ -28,7 +31,12 @@ export default function Step6Content({ direction, selectedMaintenancePlan }: Ste
             exit="exit"
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
           >
-            <FinalConfirmation selectedMaintenancePlan={selectedMaintenancePlan} />
+            <FinalConfirmation
+              selectedMaintenancePlan={selectedMaintenancePlan}
+              selectedPages={selectedPages}
+              selectedFeatures={selectedFeatures}
+              isMigration={isMigration}
+            />
           </motion.div>
         </AnimatePresence>
       </div>

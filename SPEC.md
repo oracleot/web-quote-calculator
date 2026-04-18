@@ -1,87 +1,67 @@
-# SPEC.md — Web Quote Calculator: Layout Fix + Flow Review
+# SPEC-v2: Invoice Generator Fixes (SUL-85 Round 2)
 
-## What
+## Changes Required
 
-Fix all layout/vertical spacing issues in the 6-step Web Quote Calculator (Next.js 15, TypeScript, Tailwind, Framer Motion).
+### 1. Quote-to-Invoice Integration (NEW FEATURE)
 
-## Key Issues
+**Option A: "Generate Invoice" button on quote review step**
+- In `QuoteReviewPanel.tsx` or `FinalConfirmation.tsx` (the last step of the calculator), add a "Generate Invoice" button
+- Clicking it navigates to `/invoice` with query params encoding the selected pages, features, and prices
+- The `/invoice` page reads these params on mount and pre-fills line items from them
 
-1. **page.tsx is 228 lines** — must be split below 200 lines
-2. **Step 4 (SupportPlanStep) layout broken** — cards pushed to bottom with huge whitespace above
-3. **Inconsistent vertical spacing** across steps — some stretched, some cramped
-4. **Step indicator and header not properly separated** from content
+**Option B: Item picker dropdown on invoice form**
+- In `InvoiceForm.tsx`, add a "Quick Add from Calculator" dropdown above the line items section
+- The dropdown lists all items from `pricing.ts` (PAGES items at their prices, FEATURES with their prices, base price, migration fee, maintenance plans)
+- Selecting an item adds it as a new line item with description and price pre-filled
 
-## Root Cause Analysis
+**Implement BOTH options.**
 
-### Step 4 Layout Problem
-`SupportPlanStep` renders a `<div className="max-w-2xl mx-auto w-full px-4 animate-scale-in">` that is placed **below** the step header (`<div className="mb-5 animate-fade-in-up text-center px-4">`) inside the same `<main>`. The outer `<main>` has `className="flex-1 px-4 pb-8"`. Combined with the `animate-scale-in` animation, the card appears to sit at the natural flow position but the `animate-scale-in` keyframe animation starting at `scale(0.95)` can make it look like it's positioned lower than expected. The real issue is likely that `main` uses `flex-1` which stretches it, and the card has no explicit vertical alignment.
+For Option A, encode data as URL search params:
+- `/invoice?from=quote&pages=home,about,services&features=ai-chatbot,booking&migration=true&maintenance=basic`
+- The invoice page parses these and creates line items using prices from `pricing.ts`
 
-### Step 3 Layout (Reference — GOOD)
-Step 3 uses `className="max-w-2xl mx-auto"` on the wrapper div (inside `<main>`), and that wrapper contains a `<div className="card p-6 sm:p-8 animate-scale-in">`. This works because it's directly inside `<main className="flex-1 ...">` without extra nesting.
+### 2. Copilot Review Fixes
 
-### Step 4 Layout (BAD)
-`SupportPlanStep.tsx` wraps in its own `<div className="max-w-2xl mx-auto w-full px-4 animate-scale-in">` AND has an inner `MaintenancePlanSelector` with `className="max-w-2xl mx-auto"` again. Double-nesting centered divs + `animate-scale-in` animation can cause vertical centering or downward push.
+Apply these fixes:
 
-## Files to Modify
+1. **`generateInvoiceNumber` NaN guard** — Add `Number.isFinite` check and try/catch
+2. **Delete button a11y** — Add `focus:opacity-100` and `group-focus-within:opacity-100` to delete button in InvoiceList
+3. **InvoiceList separation of concerns** — Remove direct `deleteInvoice()` call from InvoiceList. Let the page's `handleDelete` call `deleteInvoice()` from `@/lib/invoice` instead
+4. **VAT toggle** — Replace the clickable div with a real `<input type="checkbox">`
+5. **Use `next/link`** — Replace `<a href="/invoice">` in `page.tsx` (main) with `<Link>` from `next/link`
+6. **`getInvoices` validation** — Add `Array.isArray(parsed)` check. Skip full field validation (YAGNI)
+7. **UTC date fix** — Use local date helpers (`getFullYear/getMonth/getDate`) instead of `toISOString().split('T')[0]`
+8. **InvoiceList keyboard a11y** — Add `role="button"`, `tabIndex={0}`, and `onKeyDown` for Enter/Space to invoice rows
+9. **Remove unused `previewRef`** — Remove the `useRef` and `forwardRef` wrapper
+10. **`saveInvoice`/`deleteInvoice` guards** — Add `typeof window === 'undefined'` early return and try/catch
 
-### 1. `src/app/page.tsx` — SPLIT NEEDED
-**Problem:** 228 lines (exceeds 200 limit)
-**Solution:** Extract each step's content rendering into a separate component file. Keep `Home` as the orchestrator (~150 lines) and move step content into named step-content components.
+### 3. Print Duplicate Page Fix
 
-Create:
-- `src/components/steps/Step1Content.tsx` — MigrationToggle
-- `src/components/steps/Step2Content.tsx` — BuilderPhase wrapper
-- `src/components/steps/Step3Content.tsx` — QuoteReviewPanel
-- `src/components/steps/Step4Content.tsx` — SupportPlanStep
-- `src/components/steps/Step5Content.tsx` — (FormPanel is controlled externally)
-- `src/components/steps/Step6Content.tsx` — FinalConfirmation
+The current `@media print` CSS uses `visibility: hidden/visible` with `position: fixed; inset: 0; padding: 48px`. This can cause content to overflow to a second page with duplicated content.
 
-### 2. `src/components/SupportPlanStep.tsx` — LAYOUT FIX
-**Changes:**
-- Remove `animate-scale-in` from the outer wrapper (it conflicts with AnimatePresence motion.div)
-- Change outer wrapper from `max-w-2xl mx-auto w-full px-4 animate-scale-in` to `max-w-xl mx-auto`
-- Remove duplicate `max-w-2xl mx-auto` from the inner `MaintenancePlanSelector` wrapper
-- Move `animate-scale-in` only to the `.card` element inside MaintenancePlanSelector
+Fix:
+- Replace `visibility` approach with `display: none` on everything except `#invoice-preview`
+- Remove `position: fixed` — let the preview flow naturally
+- Set `#invoice-preview` to `width: 100%; max-width: 210mm; margin: 0 auto; padding: 15mm;`
+- Add `@page { margin: 10mm; size: A4; }` for proper page sizing
+- Ensure all print styles produce a single clean page
 
-### 3. `src/components/MaintenancePlanSelector.tsx` — LAYOUT FIX
-**Changes:**
-- Outer wrapper: change from `max-w-2xl mx-auto` to nothing (handled by parent SupportPlanStep)
-- Card div: keep `card p-6 sm:p-8 animate-scale-in`
-- Ensure no `max-w-*` on wrapper divs that would create double-nesting
+### 4. Mobile Responsiveness
 
-### 4. `src/components/BuilderPhase.tsx` — LAYOUT FIX
-**Changes:**
-- Outer wrapper: `max-w-5xl mx-auto` (already has it via `builder-layout-wrapper`)
-- `.card` wrapper: already has `card p-6 sm:p-8 animate-scale-in` — good
+Improve mobile UX:
+- Header: stack buttons below title on small screens (flex-wrap)
+- Form inputs: ensure full width on mobile, proper touch targets (min 44px height)
+- Line items: on mobile, stack description/qty/price vertically instead of in a row
+- Preview toggle tabs: make them sticky at top on mobile scroll
+- Action buttons (Save, Download): make them full-width on mobile, sticky at bottom
+- Saved invoices drawer: make cards stack vertically on mobile with larger touch targets
 
-### 5. `src/app/globals.css` — MINOR ADJUSTMENTS
-**Changes:**
-- Ensure `.animate-scale-in` starts at `opacity: 0, scale: 0.96` (slightly less aggressive than 0.95)
+## Build Instructions
 
-## Layout Consistency Rules
-
-All steps should follow this pattern:
-```
-<main flex-1>
-  <step-content-wrapper max-w-[sm|xl|2xl] mx-auto>
-    <div className="card p-6 sm:p-8 animate-scale-in">
-      CONTENT
-    </div>
-  </step-content-wrapper>
-</main>
-```
-
-No step content wrapper should have:
-- `animate-scale-in` AND `max-w-* mx-auto` simultaneously (causes double-animation)
-- Vertical alignment that stretches content to fill viewport
-
-## Acceptance Criteria
-
-1. `page.tsx` < 200 lines after refactor
-2. All 6 steps render with comfortable, consistent vertical spacing
-3. Step 4 cards sit naturally below the header (no excessive top whitespace)
-4. `pnpm lint` → 0 errors
-5. `pnpm typecheck` → 0 errors
-6. `pnpm build` → succeeds
-7. `pnpm test` → all pass
-8. No file > 200 lines
+1. Read this SPEC.md
+2. Implement all changes on the existing `feat/sul-85-invoice-generator` branch
+3. Run `npm run build` — must pass with zero errors
+4. Run `npx vitest run` — all tests must pass
+5. Commit with message: `fix(SUL-85): address review feedback — quote integration, print fix, a11y, mobile`
+6. Push to origin
+7. Run: `openclaw system event --text 'SUL-85 review fixes pushed to PR #4'`
