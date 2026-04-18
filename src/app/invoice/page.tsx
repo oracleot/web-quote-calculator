@@ -1,19 +1,74 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import InvoiceForm from '@/components/invoice/InvoiceForm';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import InvoiceList from '@/components/invoice/InvoiceList';
 import {
   Invoice,
+  InvoiceLineItem,
   createBlankInvoice,
   generateInvoiceNumber,
+  generateId,
   getInvoices,
   saveInvoice,
+  deleteInvoice,
 } from '@/lib/invoice';
+import { BASE_PRICE, PAGES, FEATURES, MIGRATION_FEE, PRICE_PER_EXTRA_PAGE } from '@/lib/pricing';
 
-export default function InvoicePage() {
+function buildInvoiceFromParams(params: URLSearchParams): Partial<Invoice> | null {
+  if (params.get('from') !== 'quote') return null;
+
+  const lineItems: InvoiceLineItem[] = [];
+
+  const pageIds = params.get('pages')?.split(',').filter(Boolean) ?? [];
+  const featureIds = params.get('features')?.split(',').filter(Boolean) ?? [];
+  const isMigration = params.get('migration') === 'true';
+  const maintenance = params.get('maintenance');
+
+  // Base price
+  const basePrice = isMigration && pageIds.length === 0 ? 0 : BASE_PRICE;
+  if (basePrice > 0) {
+    lineItems.push({ id: generateId(), description: 'Website Build — Base Price', quantity: 1, unitPrice: basePrice });
+  }
+
+  // Pages
+  pageIds.forEach((pid) => {
+    const page = PAGES.find((p) => p.id === pid);
+    if (page) {
+      lineItems.push({ id: generateId(), description: `Page: ${page.label}`, quantity: 1, unitPrice: PRICE_PER_EXTRA_PAGE });
+    }
+  });
+
+  // Features
+  featureIds.forEach((fid) => {
+    const feature = FEATURES.find((f) => f.id === fid);
+    if (feature) {
+      lineItems.push({ id: generateId(), description: feature.label, quantity: 1, unitPrice: feature.price });
+    }
+  });
+
+  // Migration fee
+  if (isMigration) {
+    lineItems.push({ id: generateId(), description: 'Site Migration Fee', quantity: 1, unitPrice: MIGRATION_FEE });
+  }
+
+  // Maintenance plan
+  if (maintenance === 'basic') {
+    lineItems.push({ id: generateId(), description: 'Maintenance Plan — Basic (£25/mo)', quantity: 1, unitPrice: 25 });
+  } else if (maintenance === 'standard') {
+    lineItems.push({ id: generateId(), description: 'Maintenance Plan — Standard (£40/mo)', quantity: 1, unitPrice: 40 });
+  }
+
+  if (lineItems.length === 0) return null;
+  return { lineItems };
+}
+
+function InvoicePageInner() {
+  const searchParams = useSearchParams();
+
   const [invoice, setInvoice] = useState<Invoice | null>(() => {
     const blank = createBlankInvoice();
     return { ...blank, invoiceNumber: generateInvoiceNumber() };
@@ -22,7 +77,16 @@ export default function InvoicePage() {
   const [showPreviewMobile, setShowPreviewMobile] = useState(false);
   const [showList, setShowList] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
-  const previewRef = useRef<HTMLDivElement>(null);
+
+  // Pre-fill line items from quote params (Option A)
+  useEffect(() => {
+    const overrides = buildInvoiceFromParams(searchParams);
+    if (overrides) {
+      setInvoice((prev) => prev ? { ...prev, ...overrides } : prev);
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = () => {
     if (!invoice) return;
@@ -44,6 +108,7 @@ export default function InvoicePage() {
   };
 
   const handleDelete = (id: string) => {
+    deleteInvoice(id);
     setSavedInvoices((prev) => prev.filter((i) => i.id !== id));
     if (invoice?.id === id) {
       const blank = createBlankInvoice();
@@ -61,61 +126,72 @@ export default function InvoicePage() {
 
   return (
     <>
-      {/* Print styles — only the preview is printed */}
+      {/* Print styles — only the preview is printed, no duplicate page */}
       <style>{`
+        @page { margin: 10mm; size: A4; }
         @media print {
-          body * { visibility: hidden !important; }
-          #invoice-preview, #invoice-preview * { visibility: visible !important; }
+          body > * { display: none !important; }
+          #invoice-preview-wrapper { display: block !important; }
           #invoice-preview {
-            position: fixed !important;
-            inset: 0 !important;
-            margin: 0 !important;
-            padding: 48px !important;
+            width: 100% !important;
+            max-width: 210mm !important;
+            margin: 0 auto !important;
+            padding: 15mm !important;
             border-radius: 0 !important;
             box-shadow: none !important;
             background: white !important;
             color: #09090b !important;
-            z-index: 9999 !important;
           }
+        }
+        #invoice-preview-wrapper { display: none; }
+        @media print {
+          #invoice-preview-wrapper { display: block !important; }
         }
       `}</style>
 
+      {/* Hidden print-only wrapper */}
+      <div id="invoice-preview-wrapper" aria-hidden="true">
+        <InvoicePreview invoice={invoice} />
+      </div>
+
       <div className="relative min-h-screen">
         {/* Header */}
-        <header className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Calculator
-            </Link>
-            <span className="text-[var(--border)]">|</span>
-            <h1 className="text-base font-bold text-[var(--text-primary)] font-display">
-              Invoice Generator
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            {saveMsg && (
-              <span className="text-xs text-[var(--success)] animate-fade-in">{saveMsg}</span>
-            )}
-            <button
-              type="button"
-              className="btn-secondary text-sm py-1.5 px-3"
-              onClick={() => setShowList((v) => !v)}
-            >
-              {showList ? 'Close' : `Saved (${savedInvoices.length})`}
-            </button>
-            <button
-              type="button"
-              className="btn-secondary text-sm py-1.5 px-3"
-              onClick={handleNew}
-            >
-              + New
-            </button>
+        <header className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Calculator
+              </Link>
+              <span className="text-[var(--border)]">|</span>
+              <h1 className="text-base font-bold text-[var(--text-primary)] font-display">
+                Invoice Generator
+              </h1>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {saveMsg && (
+                <span className="text-xs text-[var(--success)] animate-fade-in">{saveMsg}</span>
+              )}
+              <button
+                type="button"
+                className="btn-secondary text-sm py-1.5 px-3 min-h-[44px] sm:min-h-0"
+                onClick={() => setShowList((v) => !v)}
+              >
+                {showList ? 'Close' : `Saved (${savedInvoices.length})`}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary text-sm py-1.5 px-3 min-h-[44px] sm:min-h-0"
+                onClick={handleNew}
+              >
+                + New
+              </button>
+            </div>
           </div>
         </header>
 
@@ -136,18 +212,18 @@ export default function InvoicePage() {
           </div>
         )}
 
-        {/* Mobile preview toggle */}
-        <div className="sm:hidden flex border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+        {/* Mobile preview toggle — sticky */}
+        <div className="sm:hidden sticky top-0 z-10 flex border-b border-[var(--border)] bg-[var(--bg-elevated)]">
           <button
             type="button"
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${!showPreviewMobile ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors min-h-[44px] ${!showPreviewMobile ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}
             onClick={() => setShowPreviewMobile(false)}
           >
             Form
           </button>
           <button
             type="button"
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${showPreviewMobile ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors min-h-[44px] ${showPreviewMobile ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}
             onClick={() => setShowPreviewMobile(true)}
           >
             Preview
@@ -176,7 +252,7 @@ export default function InvoicePage() {
                   </span>
                   <button
                     type="button"
-                    className="btn-secondary text-xs py-1 px-3 flex items-center gap-1.5"
+                    className="btn-secondary text-xs py-1 px-3 flex items-center gap-1.5 min-h-[44px] sm:min-h-0"
                     onClick={handleDownload}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +262,7 @@ export default function InvoicePage() {
                   </button>
                 </div>
                 <div className="shadow-xl rounded-lg overflow-hidden border border-[var(--border)]">
-                  <InvoicePreview ref={previewRef} invoice={invoice} />
+                  <InvoicePreview invoice={invoice} />
                 </div>
               </div>
             </div>
@@ -194,5 +270,15 @@ export default function InvoicePage() {
         </div>
       </div>
     </>
+  );
+}
+
+import { Suspense } from 'react';
+
+export default function InvoicePage() {
+  return (
+    <Suspense>
+      <InvoicePageInner />
+    </Suspense>
   );
 }

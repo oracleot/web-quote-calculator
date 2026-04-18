@@ -1,6 +1,13 @@
 'use client';
 
 import { Invoice, InvoiceLineItem, generateId } from '@/lib/invoice';
+import {
+  BASE_PRICE,
+  PAGES,
+  PRICE_PER_EXTRA_PAGE,
+  FEATURES,
+  MIGRATION_FEE,
+} from '@/lib/pricing';
 
 interface InvoiceFormProps {
   invoice: Invoice;
@@ -50,6 +57,24 @@ function Field({
   );
 }
 
+// All calculator items available for quick-add
+const QUICK_ADD_ITEMS: { label: string; description: string; price: number }[] = [
+  { label: 'Base Website Price', description: 'Base website build price', price: BASE_PRICE },
+  ...PAGES.map((p) => ({
+    label: `Page: ${p.label}`,
+    description: `${p.label} page`,
+    price: PRICE_PER_EXTRA_PAGE,
+  })),
+  ...FEATURES.map((f) => ({
+    label: `Feature: ${f.label}`,
+    description: f.label,
+    price: f.price,
+  })),
+  { label: 'Migration Fee', description: 'Site migration from existing platform', price: MIGRATION_FEE },
+  { label: 'Maintenance: Basic (£25/mo)', description: 'Basic maintenance plan — £25/mo', price: 25 },
+  { label: 'Maintenance: Standard (£40/mo)', description: 'Standard maintenance plan — £40/mo', price: 40 },
+];
+
 export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: InvoiceFormProps) {
   const update = (partial: Partial<Invoice>) => onChange({ ...invoice, ...partial });
 
@@ -73,6 +98,21 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
   const removeLineItem = (id: string) => {
     if (invoice.lineItems.length === 1) return;
     update({ lineItems: invoice.lineItems.filter((i) => i.id !== id) });
+  };
+
+  const handleQuickAdd = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (!value) return;
+    const item = QUICK_ADD_ITEMS.find((i) => i.label === value);
+    if (!item) return;
+    update({
+      lineItems: [
+        ...invoice.lineItems,
+        { id: generateId(), description: item.description, quantity: 1, unitPrice: item.price },
+      ],
+    });
+    // Reset select
+    e.target.value = '';
   };
 
   return (
@@ -118,7 +158,7 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
             <label className="text-xs font-medium text-[var(--text-secondary)]">Date</label>
             <input
               type="date"
-              className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all"
+              className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all min-h-[44px]"
               value={invoice.date}
               onChange={(e) => update({ date: e.target.value })}
             />
@@ -127,7 +167,7 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
             <label className="text-xs font-medium text-[var(--text-secondary)]">Due Date</label>
             <input
               type="date"
-              className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all"
+              className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all min-h-[44px]"
               value={invoice.dueDate}
               onChange={(e) => update({ dueDate: e.target.value })}
             />
@@ -167,15 +207,34 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
         <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-widest">
           Line Items
         </h3>
+
+        {/* Quick Add from Calculator — Option B */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-[var(--text-secondary)]">Quick Add from Calculator</label>
+          <select
+            className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all min-h-[44px]"
+            defaultValue=""
+            onChange={handleQuickAdd}
+            aria-label="Quick add a calculator item as a line item"
+          >
+            <option value="" disabled>Select an item to add…</option>
+            {QUICK_ADD_ITEMS.map((item) => (
+              <option key={item.label} value={item.label}>
+                {item.label} — £{item.price}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex flex-col gap-2">
           {invoice.lineItems.map((item) => (
             <div
               key={item.id}
-              className="grid grid-cols-[1fr_60px_80px_28px] gap-2 items-center"
+              className="grid grid-cols-[1fr_60px_80px_28px] sm:grid-cols-[1fr_60px_80px_28px] gap-2 items-center max-sm:grid-cols-1 max-sm:gap-1.5 max-sm:bg-[var(--bg-elevated)] max-sm:p-2 max-sm:rounded-lg max-sm:border max-sm:border-[var(--border)]"
             >
               <input
                 type="text"
-                className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all"
+                className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all min-h-[44px] sm:min-h-0"
                 placeholder="Description"
                 value={item.description}
                 onChange={(e) => updateLineItem(item.id, { description: e.target.value })}
@@ -183,7 +242,7 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
               <input
                 type="number"
                 min={1}
-                className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all text-center font-mono"
+                className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all text-center font-mono min-h-[44px] sm:min-h-0"
                 placeholder="Qty"
                 value={item.quantity}
                 onChange={(e) => updateLineItem(item.id, { quantity: Math.max(1, Number(e.target.value)) })}
@@ -192,7 +251,7 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
                 type="number"
                 min={0}
                 step={0.01}
-                className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all font-mono"
+                className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-all font-mono min-h-[44px] sm:min-h-0"
                 placeholder="£0.00"
                 value={item.unitPrice}
                 onChange={(e) => updateLineItem(item.id, { unitPrice: Math.max(0, Number(e.target.value)) })}
@@ -201,7 +260,7 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
                 type="button"
                 onClick={() => removeLineItem(item.id)}
                 disabled={invoice.lineItems.length === 1}
-                className="w-7 h-7 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--error)] hover:bg-[var(--error-bg)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-7 h-7 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--error)] hover:bg-[var(--error-bg)] transition-all disabled:opacity-30 disabled:cursor-not-allowed max-sm:w-full max-sm:h-9 max-sm:text-xs max-sm:rounded-lg"
                 aria-label="Remove line item"
               >
                 ×
@@ -225,16 +284,12 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
         </h3>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 cursor-pointer select-none">
-            <div
-              className={`checkbox ${invoice.taxRate !== null ? 'checked' : ''}`}
-              onClick={() => update({ taxRate: invoice.taxRate !== null ? null : 20 })}
-            >
-              {invoice.taxRate !== null && (
-                <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </div>
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded border border-[var(--border)] accent-[var(--accent)] cursor-pointer"
+              checked={invoice.taxRate !== null}
+              onChange={(e) => update({ taxRate: e.target.checked ? 20 : null })}
+            />
             <span className="text-sm text-[var(--text-primary)]">Apply VAT</span>
           </label>
           {invoice.taxRate !== null && (
@@ -262,11 +317,11 @@ export default function InvoiceForm({ invoice, onChange, onSave, onDownload }: I
       </section>
 
       {/* Actions */}
-      <div className="flex gap-3">
-        <button type="button" className="btn-primary flex-1" onClick={onSave}>
+      <div className="flex gap-3 max-sm:flex-col sm:sticky sm:bottom-0">
+        <button type="button" className="btn-primary flex-1 min-h-[44px]" onClick={onSave}>
           Save Invoice
         </button>
-        <button type="button" className="btn-secondary flex-1" onClick={onDownload}>
+        <button type="button" className="btn-secondary flex-1 min-h-[44px]" onClick={onDownload}>
           Download PDF
         </button>
       </div>

@@ -29,34 +29,52 @@ export function getInvoices(): Invoice[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(INVOICES_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed as Invoice[];
   } catch {
     return [];
   }
 }
 
 export function saveInvoice(invoice: Invoice): void {
-  const invoices = getInvoices();
-  const idx = invoices.findIndex((i) => i.id === invoice.id);
-  if (idx >= 0) {
-    invoices[idx] = invoice;
-  } else {
-    invoices.unshift(invoice);
+  if (typeof window === 'undefined') return;
+  try {
+    const invoices = getInvoices();
+    const idx = invoices.findIndex((i) => i.id === invoice.id);
+    if (idx >= 0) {
+      invoices[idx] = invoice;
+    } else {
+      invoices.unshift(invoice);
+    }
+    localStorage.setItem(INVOICES_KEY, JSON.stringify(invoices));
+  } catch {
+    // silently fail if localStorage is unavailable
   }
-  localStorage.setItem(INVOICES_KEY, JSON.stringify(invoices));
 }
 
 export function deleteInvoice(id: string): void {
-  const invoices = getInvoices().filter((i) => i.id !== id);
-  localStorage.setItem(INVOICES_KEY, JSON.stringify(invoices));
+  if (typeof window === 'undefined') return;
+  try {
+    const invoices = getInvoices().filter((i) => i.id !== id);
+    localStorage.setItem(INVOICES_KEY, JSON.stringify(invoices));
+  } catch {
+    // silently fail if localStorage is unavailable
+  }
 }
 
 export function generateInvoiceNumber(): string {
   if (typeof window === 'undefined') return 'INV-001';
-  const current = parseInt(localStorage.getItem(COUNTER_KEY) ?? '0', 10);
-  const next = current + 1;
-  localStorage.setItem(COUNTER_KEY, String(next));
-  return `INV-${String(next).padStart(3, '0')}`;
+  try {
+    const raw = localStorage.getItem(COUNTER_KEY);
+    const current = parseInt(raw ?? '0', 10);
+    const next = Number.isFinite(current) ? current + 1 : 1;
+    localStorage.setItem(COUNTER_KEY, String(next));
+    return `INV-${String(next).padStart(3, '0')}`;
+  } catch {
+    return 'INV-001';
+  }
 }
 
 export function generateId(): string {
@@ -86,14 +104,22 @@ export function formatDate(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
+// Use local date to avoid UTC offset shifting the date
 export function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function addDays(iso: string, days: number): string {
   const d = new Date(iso);
   d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function createBlankInvoice(): Omit<Invoice, 'invoiceNumber'> {
