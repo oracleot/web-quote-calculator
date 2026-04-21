@@ -125,7 +125,7 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
               </button>
 
               {isEmailFeature && (
-                <div className="px-4 pb-4 mt-3 pt-3 border-t border-[var(--border)]">
+                <div className="px-4 pb-4">
                   <button
                     type="button"
                     aria-expanded={isExpanded}

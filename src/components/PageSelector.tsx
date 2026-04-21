@@ -200,7 +200,7 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
 
       {/* Desktop: flat grid */}
       {!isMobile && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           {PAGES.map((page) => {
             const isSelected = selected.includes(page.id);
             return (
