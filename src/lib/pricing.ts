@@ -25,6 +25,12 @@ export const FEATURES = [
   { id: 'social', label: 'Social Media Integration', price: 30, description: 'Connect your social profiles' },
   { id: 'analytics', label: 'Google Analytics', price: 25, description: 'Visitor tracking and reporting' },
   { id: 'multilang', label: 'Multi-language Support', price: 80, description: 'Localized content in multiple languages' },
+  {
+    id: 'email-management-dashboard',
+    label: 'Email Management Dashboard',
+    price: 150,
+    description: 'Centralized inbox/outbox with compose, send, search, and filtering tools',
+  },
 ];
 
 export const MIGRATION_FEE = 100;
