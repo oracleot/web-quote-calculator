@@ -1,17 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { calculateQuote } from '@/lib/pricing';
-import { useDirection } from '@/hooks/useDirection';
-import { useSelectionList } from '@/hooks/useSelectionList';
 import QuoteFlow from '@/components/conversational/QuoteFlow';
 import type { QuoteFlowState } from '@/components/conversational/recommendations';
 import FormPanel from '@/components/FormPanel';
-import Step6Content from '@/components/steps/Step6Content';
-import QuoteSummary from '@/components/QuoteSummary';
 
-const EMPTY_IDS: string[] = Object.freeze([]) as unknown as string[];
 type CouponStatus = 'idle' | 'valid' | 'invalid' | 'error';
 
 export default function Home() {
@@ -26,15 +20,6 @@ export default function Home() {
   const [showFormPanel, setShowFormPanel] = useState(false);
   const [flowState, setFlowState] = useState<QuoteFlowState | null>(null);
 
-  const { direction, goNext, goPrev } = useDirection();
-
-  const quote = useMemo(() => {
-    if (!flowState) return calculateQuote([], []);
-    return calculateQuote(flowState.selectedPages, flowState.selectedFeatures, { isMigration: flowState.isMigration });
-  }, [flowState]);
-
-  const selectedPageItems = useSelectionList(flowState?.selectedPages ?? [], EMPTY_IDS);
-  const selectedFeatureItems = useSelectionList(EMPTY_IDS, flowState?.selectedFeatures ?? []);
 
   const handleCouponBlur = async () => {
     if (!couponCode.trim() || !clientEmail.trim()) { setCouponStatus('idle'); setCouponDiscount(null); return; }
@@ -83,7 +68,6 @@ export default function Home() {
 
   const handleCloseFormPanel = () => {
     setShowFormPanel(false);
-    goPrev();
   };
 
   return (

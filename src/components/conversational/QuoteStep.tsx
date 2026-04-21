@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FEATURES, PAGES, BASE_PRICE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE, MIGRATION_FEE, calculateQuote } from '@/lib/pricing';
 import type { QuoteFlowState, BusinessType } from './recommendations';
@@ -12,7 +12,7 @@ interface QuoteStepProps {
   state: QuoteFlowState;
   onUpdate: (partial: Partial<QuoteFlowState>) => void;
   onNext: () => void;
-  onBack: () => void;
+  onGoToStep: (step: number) => void;
   onBusinessTypeSelect?: (type: BusinessType) => void;
 }
 
@@ -38,6 +38,17 @@ function ChevronIcon({ open }: { open: boolean }) {
 
 // ─── Step 0: Business Type ───
 function StepBusinessType({ state, onBusinessTypeSelect, onNext }: { state: QuoteFlowState; onBusinessTypeSelect: (type: BusinessType) => void; onNext: () => void }) {
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+      }
+    };
+  }, []);
+
   const options: { type: BusinessType; label: string; description: string; icon: React.ReactNode }[] = [
     {
       type: 'service',
@@ -79,9 +90,17 @@ function StepBusinessType({ state, onBusinessTypeSelect, onNext }: { state: Quot
             <button
               key={type}
               onClick={() => {
+                if (isAdvancing) return;
+                setIsAdvancing(true);
                 onBusinessTypeSelect(type);
-                setTimeout(() => onNext(), 300);
+                if (advanceTimerRef.current) {
+                  clearTimeout(advanceTimerRef.current);
+                }
+                advanceTimerRef.current = setTimeout(() => {
+                  onNext();
+                }, 300);
               }}
+              disabled={isAdvancing}
               className={`
                 w-full text-left p-4 rounded-xl border transition-all duration-200
                 flex items-center gap-4
@@ -188,8 +207,8 @@ function StepPages({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (part
     });
   };
 
-  // Count all hidden items for the "Show X more" button
-  const totalHiddenItems = allOptional.reduce((sum, g) => sum + g.items.length, 0);
+  const visibleOptional = showMorePages ? allOptional : allOptional.slice(0, 1);
+  const totalHiddenItems = allOptional.slice(1).reduce((sum, g) => sum + g.items.length, 0);
 
   return (
     <div className="space-y-4">
@@ -228,7 +247,7 @@ function StepPages({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (part
       </div>
 
       {/* Optional pages by group */}
-      {allOptional.map(({ group, items }) => (
+      {visibleOptional.map(({ group, items }) => (
         <div key={group} className="space-y-1.5">
           <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-1 mb-2">{group}</p>
           {items.map((pageId) => {
@@ -263,7 +282,7 @@ function StepPages({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (part
       ))}
 
       {/* Show more toggle */}
-      {totalHiddenItems > 0 && (
+      {allOptional.length > 1 && (
         <button
           onClick={() => setShowMorePages(!showMorePages)}
           className="flex items-center gap-2 text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors px-1"
@@ -350,7 +369,8 @@ function StepMigrationPages({ state, onUpdate }: { state: QuoteFlowState; onUpda
     });
   };
 
-  const totalHiddenItems = allMigrationPages.optional.reduce((sum, g) => sum + g.items.length, 0);
+  const visibleOptional = showMorePages ? allMigrationPages.optional : allMigrationPages.optional.slice(0, 1);
+  const totalHiddenItems = allMigrationPages.optional.slice(1).reduce((sum, g) => sum + g.items.length, 0);
 
   return (
     <div className="space-y-4">
@@ -395,7 +415,7 @@ function StepMigrationPages({ state, onUpdate }: { state: QuoteFlowState; onUpda
       </div>
 
       {/* Optional migration pages by group */}
-      {allMigrationPages.optional.map(({ group, items }) => (
+      {visibleOptional.map(({ group, items }) => (
         <div key={group} className="space-y-1.5">
           <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-1 mb-2">{group}</p>
           {items.map((pageId) => {
@@ -430,7 +450,7 @@ function StepMigrationPages({ state, onUpdate }: { state: QuoteFlowState; onUpda
       ))}
 
       {/* Show more toggle */}
-      {totalHiddenItems > 0 && (
+      {allMigrationPages.optional.length > 1 && (
         <button
           onClick={() => setShowMorePages(!showMorePages)}
           className="flex items-center gap-2 text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors px-1"
@@ -717,7 +737,7 @@ function StepSummary({ state, onGoToStep }: { state: QuoteFlowState; onGoToStep:
 }
 
 // ─── Main QuoteStep component ───
-export default function QuoteStep({ step, state, onUpdate, onNext, onBusinessTypeSelect }: QuoteStepProps) {
+export default function QuoteStep({ step, state, onUpdate, onNext, onGoToStep, onBusinessTypeSelect }: QuoteStepProps) {
   const contentVariants = {
     enter: { x: 30, opacity: 0 },
     center: { x: 0, opacity: 1 },
@@ -759,7 +779,7 @@ export default function QuoteStep({ step, state, onUpdate, onNext, onBusinessTyp
         {step === 3 && state.isMigration && <StepRevamp state={state} onUpdate={onUpdate} />}
         {step === 3 && !state.isMigration && <StepFeatures state={state} onUpdate={onUpdate} />}
         {step === 4 && state.isMigration && <StepFeatures state={state} onUpdate={onUpdate} />}
-        {step === 5 && <StepSummary state={state} onGoToStep={(s) => onUpdate({ currentStep: s })} />}
+        {step === 5 && <StepSummary state={state} onGoToStep={onGoToStep} />}
       </motion.div>
     </AnimatePresence>
   );

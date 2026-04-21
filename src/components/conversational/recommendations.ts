@@ -83,8 +83,8 @@ export interface QuoteFlowState {
   maintenancePlan: 'none' | 'basic' | 'standard';
 }
 
-export const TOTAL_FLOW_STEPS = 5; // Max step index (Summary = step 5)
-export const FLOW_STEP_LABELS = ['Type', 'Migration', 'Pages', 'Features', 'Summary'];
+export const FLOW_STEP_LABELS = ['Type', 'Migration', 'Pages', 'Revamp', 'Features', 'Summary'];
+export const TOTAL_FLOW_STEPS = FLOW_STEP_LABELS.length - 1; // Max step index (Summary = step 5)
 
 export function getInitialState(): QuoteFlowState {
   return {

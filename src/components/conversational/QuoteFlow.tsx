@@ -64,11 +64,10 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
     setState((prev) => {
       const currentStep = prev.currentStep;
       let nextStep = currentStep + 1;
-      // Skip irrelevant steps based on migration path
-      // Non-migration: skip step 4 (Revamp, migration-only)
       if (!prev.isMigration && nextStep === 4) {
-        nextStep = 5; // Skip to Summary
+        nextStep = 5;
       }
+      nextStep = Math.min(nextStep, TOTAL_FLOW_STEPS);
       const nextHistory = prev.history.includes(currentStep)
         ? prev.history
         : [...prev.history, currentStep];
@@ -89,10 +88,11 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
   }, []);
 
   const goToStep = useCallback((step: number) => {
+    const safeStep = Math.max(0, Math.min(step, TOTAL_FLOW_STEPS));
     setState((prev) => ({
       ...prev,
-      currentStep: step,
-      history: prev.history.includes(step) ? prev.history : [...prev.history, step],
+      currentStep: safeStep,
+      history: prev.history.includes(safeStep) ? prev.history : [...prev.history, safeStep],
     }));
   }, []);
 
@@ -116,12 +116,12 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
     };
   }, [state]);
 
-  const canGoNext = state.currentStep < TOTAL_FLOW_STEPS;
+  const canGoNext =
+    state.currentStep < TOTAL_FLOW_STEPS
+    && (state.currentStep !== 0 || Boolean(state.businessType));
   const isLastStep = state.currentStep === TOTAL_FLOW_STEPS;
 
-  const stepLabels = state.isMigration
-    ? ['Business Type', 'Migration?', 'Pages', 'Revamp?', 'Features', 'Summary']
-    : ['Business Type', 'Migration?', 'Pages', 'Features', 'Summary'];
+  const stepLabels = ['Business Type', 'Migration?', 'Pages', 'Revamp?', 'Features', 'Summary'];
 
   const handleBusinessTypeSelect = useCallback((type: BusinessType) => {
     setState((prev) => ({
@@ -189,7 +189,7 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
               state={state}
               onUpdate={update}
               onNext={goNext}
-              onBack={goBack}
+              onGoToStep={goToStep}
               onBusinessTypeSelect={handleBusinessTypeSelect}
             />
           </motion.div>

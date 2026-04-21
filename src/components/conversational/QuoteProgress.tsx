@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { TOTAL_FLOW_STEPS, FLOW_STEP_LABELS } from './recommendations';
+import { FLOW_STEP_LABELS } from './recommendations';
 
 interface QuoteProgressProps {
   currentStep: number;
@@ -10,13 +10,14 @@ interface QuoteProgressProps {
 }
 
 export default function QuoteProgress({ currentStep, history, onGoToStep }: QuoteProgressProps) {
-  const visitedSet = new Set([0, ...history]);
+  const lastStepIndex = FLOW_STEP_LABELS.length - 1;
+  const visitedSet = new Set([0, currentStep, ...history]);
 
   return (
     <div className="w-full">
       {/* Step dots + labels */}
       <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1">
-        {Array.from({ length: TOTAL_FLOW_STEPS + 1 }, (_, i) => {
+        {Array.from({ length: FLOW_STEP_LABELS.length }, (_, i) => {
           const isActive = i === currentStep;
           const isVisited = visitedSet.has(i);
 
@@ -55,7 +56,7 @@ export default function QuoteProgress({ currentStep, history, onGoToStep }: Quot
               </button>
 
               {/* Connector line */}
-              {i < TOTAL_FLOW_STEPS && (
+              {i < lastStepIndex && (
                 <div className={`w-4 sm:w-6 h-px flex-shrink-0 ${isVisited ? 'bg-[rgba(34,211,238,0.3)]' : 'bg-[var(--border)]'}`} />
               )}
             </div>
