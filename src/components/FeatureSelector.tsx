@@ -86,7 +86,7 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3">
         {FEATURES.map((feature) => {
           const isSelected = selected.includes(feature.id);
           const isEmailFeature = feature.id === 'email-management-dashboard';
