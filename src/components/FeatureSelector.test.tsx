@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import FeatureSelector from './FeatureSelector';
 
 describe('FeatureSelector', () => {
@@ -40,14 +40,18 @@ describe('FeatureSelector', () => {
   it('displays feature prices including social feed and email dashboard', () => {
     render(<FeatureSelector selected={[]} onChange={mockOnChange} />);
     expect(screen.getByText('+£100')).toBeDefined(); // AI Chatbot price
-    expect(screen.getAllByText('+£80').length).toBeGreaterThan(0); // Social Feed Integration price
+
+    const socialCard = screen.getByTestId('feature-card-social');
+    expect(within(socialCard).getByTestId('feature-price-social')).toHaveTextContent('+£80');
+
     expect(screen.getByText('+£150')).toBeDefined(); // Email Management Dashboard price
   });
 
   it('expands email feature details when requested', () => {
     render(<FeatureSelector selected={[]} onChange={mockOnChange} />);
 
-    const detailsToggle = screen.getByRole('button', { name: /what’s included\?/i });
+    const emailCard = screen.getByTestId('feature-card-email-management-dashboard');
+    const detailsToggle = within(emailCard).getByRole('button', { name: /what’s included\?/i });
     fireEvent.click(detailsToggle);
 
     expect(screen.getByText(/Centralized inbox and outbox/i)).toBeDefined();
@@ -62,6 +66,20 @@ describe('FeatureSelector', () => {
     fireEvent.click(socialFeatureButton);
 
     expect(mockOnChange).toHaveBeenCalledWith(['social']);
-    expect(screen.getAllByText('+£80').length).toBeGreaterThan(0);
+
+    const socialCard = screen.getByTestId('feature-card-social');
+    expect(within(socialCard).getByTestId('feature-price-social')).toHaveTextContent('+£80');
+  });
+
+  it('expands social feed details when requested', () => {
+    render(<FeatureSelector selected={[]} onChange={mockOnChange} />);
+
+    const socialCard = screen.getByTestId('feature-card-social');
+    const detailsToggle = within(socialCard).getByRole('button', { name: /what’s included\?/i });
+    fireEvent.click(detailsToggle);
+
+    expect(screen.getByText(/Embedded Instagram\/Facebook\/X feed blocks/i)).toBeDefined();
+    expect(screen.getByText(/Automatic display of latest social posts/i)).toBeDefined();
+    expect(screen.getByText(/Matched feed styling to fit your site design/i)).toBeDefined();
   });
 });

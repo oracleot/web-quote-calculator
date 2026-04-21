@@ -7,7 +7,6 @@ import BuilderPhase from '@/components/BuilderPhase';
 import QuoteSummary from '@/components/QuoteSummary';
 import FormPanel from '@/components/FormPanel';
 import MigrationToggle from '@/components/MigrationToggle';
-import SelectionBottomBar from '@/components/SelectionBottomBar';
 import SupportPlanStep from '@/components/SupportPlanStep';
 import Step3Content from '@/components/steps/Step3Content';
 import Step6Content from '@/components/steps/Step6Content';
@@ -31,8 +30,8 @@ type CouponStatus = 'idle' | 'valid' | 'invalid' | 'error';
 export default function Home() {
   const [step, setStep] = useState(1);
   const [isMigration, setIsMigration] = useState(false);
-  const [siteType, setSiteType] = useState<'one-page' | 'multi-page'>('multi-page');
-  const [selectedPages, setSelectedPages] = useState<string[]>(['home']);
+  const [siteType] = useState<'one-page' | 'multi-page'>('multi-page');
+  const [selectedPages, setSelectedPages] = useState<string[]>(['home', 'about', 'services', 'contact']);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -117,7 +116,7 @@ export default function Home() {
         {step === 1 && (
           <div className="px-4 mb-4 animate-fade-in">
             <div className="max-w-5xl mx-auto">
-              <MigrationToggle isMigration={isMigration} onChange={(v) => { setIsMigration(v); setSelectedPages(v ? [] : ['home']); }} />
+              <MigrationToggle isMigration={isMigration} onChange={(v) => { setIsMigration(v); setSelectedPages(v ? [] : ['home', 'about', 'services', 'contact']); }} />
             </div>
           </div>
         )}
@@ -136,7 +135,6 @@ export default function Home() {
             <BuilderPhase step={step} direction={direction}
               selectedPages={selectedPages} setSelectedPages={setSelectedPages}
               selectedFeatures={selectedFeatures} setSelectedFeatures={setSelectedFeatures}
-              siteType={siteType} setSiteType={setSiteType}
               livePrice={livePrice} featureTotal={featureTotal}
               selectedPageItems={selectedPageItems} selectedFeatureItems={selectedFeatureItems}
               onPrev={handlePrev} onNext={handleNext} canContinue={canProceed()} isMigration={isMigration} />
@@ -211,13 +209,6 @@ export default function Home() {
           </p>
         </footer>
       </div>
-
-      {isBuilderPhase && (
-        <SelectionBottomBar selectedPages={selectedPageItems} selectedFeatures={selectedFeatureItems}
-          livePrice={livePrice} featureTotal={featureTotal}
-          onContinue={handleNext} onBack={handlePrev} step={step}
-          canContinue={canProceed()} isMigration={isMigration} />
-      )}
 
       <FormPanel open={showFormPanel && step === 5} onClose={() => { setShowFormPanel(false); goPrev(); setStep(4); }}
         name={clientName} email={clientEmail} couponCode={couponCode}
