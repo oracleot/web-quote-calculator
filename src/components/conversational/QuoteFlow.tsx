@@ -1,19 +1,60 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateQuote } from '@/lib/pricing';
 import type { QuoteFlowState, BusinessType } from './recommendations';
-import { TOTAL_FLOW_STEPS, getInitialState, applyBusinessTypeDefaults } from './recommendations';
+import { TOTAL_FLOW_STEPS, getInitialState } from './recommendations';
 import QuoteStep from './QuoteStep';
 import QuoteProgress from './QuoteProgress';
+
+const STORAGE_KEY = 'quote_flow_state_v1';
+
+function loadState(): QuoteFlowState {
+  if (typeof window === 'undefined') return getInitialState();
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (typeof parsed.currentStep === 'number' && Array.isArray(parsed.history)) {
+        return { ...getInitialState(), ...parsed };
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return getInitialState();
+}
+
+function saveState(state: QuoteFlowState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function clearState() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 interface QuoteFlowProps {
   onProceedToForm: (state: QuoteFlowState) => void;
 }
 
 export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
-  const [state, setState] = useState<QuoteFlowState>(getInitialState);
+  const [state, setState] = useState<QuoteFlowState>(loadState);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced save on every state change
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => saveState(state), 300);
+  }, [state]);
 
   const update = useCallback((partial: Partial<QuoteFlowState>) => {
     setState((prev) => ({ ...prev, ...partial }));
@@ -45,31 +86,43 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
     }));
   }, []);
 
-  const handleBusinessTypeSelect = useCallback((type: BusinessType) => {
-    const withDefaults = applyBusinessTypeDefaults({ ...state, businessType: type });
-    update(withDefaults);
-  }, [state, update]);
-
-  const handleUpdate = useCallback((partial: Partial<QuoteFlowState>) => {
-    // When business type changes, apply new defaults
-    if (partial.businessType !== undefined && partial.businessType !== state.businessType) {
-      const withDefaults = applyBusinessTypeDefaults({ ...state, ...partial });
-      update(withDefaults);
-    } else {
-      update(partial);
+  // Compute the live price for the counter
+  const liveQuote = useMemo(() => {
+    if (!state.businessType) {
+      return { total: 0, hasBusinessType: false };
     }
-  }, [state, update]);
 
-  const quote = useMemo(
-    () => calculateQuote(state.selectedPages, state.selectedFeatures, { isMigration: state.isMigration }),
-    [state.selectedPages, state.selectedFeatures, state.isMigration]
-  );
+    let quote;
+    if (state.isMigration) {
+      quote = calculateQuote(state.migrationPageIds, state.selectedFeatures, { isMigration: true });
+    } else {
+      quote = calculateQuote(state.selectedPages, state.selectedFeatures, { isMigration: false });
+    }
+
+    const revampFee = state.isRevamp ? 100 : 0;
+    return {
+      total: quote.total + revampFee,
+      hasBusinessType: true,
+    };
+  }, [state]);
 
   const canGoNext = state.currentStep < TOTAL_FLOW_STEPS;
   const isLastStep = state.currentStep === TOTAL_FLOW_STEPS;
 
-  // Step label for the user-facing flow
-  const stepLabels = ['Business Type', 'Pages', 'Features', 'Migration', 'Summary'];
+  const stepLabels = ['Business Type', 'Migration?', 'Pages', 'Revamp?', 'Features', 'Summary'];
+
+  const handleBusinessTypeSelect = useCallback((type: BusinessType) => {
+    setState((prev) => ({
+      ...prev,
+      businessType: type,
+      history: prev.history.includes(0) ? prev.history : [...prev.history, 0],
+    }));
+  }, []);
+
+  const handleProceedToForm = useCallback((finalState: QuoteFlowState) => {
+    clearState();
+    onProceedToForm(finalState);
+  }, [onProceedToForm]);
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -80,12 +133,12 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
           <div className="flex items-baseline gap-1.5">
             <span className="text-sm text-[var(--text-muted)]">Quote:</span>
             <motion.span
-              key={quote.total}
+              key={liveQuote.total}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-xl font-bold font-mono text-[var(--text-primary)]"
             >
-              £{quote.total}
+              {liveQuote.hasBusinessType ? `£${liveQuote.total}` : '£—'}
             </motion.span>
           </div>
 
@@ -99,7 +152,7 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
           </div>
         </div>
 
-        {/* Mobile progress (horizontal scroll) */}
+        {/* Mobile progress */}
         <div className="sm:hidden mt-3">
           <QuoteProgress
             currentStep={state.currentStep}
@@ -122,9 +175,10 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
             <QuoteStep
               step={state.currentStep}
               state={state}
-              onUpdate={handleUpdate}
+              onUpdate={update}
               onNext={goNext}
               onBack={goBack}
+              onBusinessTypeSelect={handleBusinessTypeSelect}
             />
           </motion.div>
         </AnimatePresence>
@@ -162,7 +216,7 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
           {/* Next / Submit button */}
           {isLastStep ? (
             <button
-              onClick={() => onProceedToForm(state)}
+              onClick={() => handleProceedToForm(state)}
               className="btn-primary px-6 py-2.5 flex items-center gap-2"
             >
               Get My Quote

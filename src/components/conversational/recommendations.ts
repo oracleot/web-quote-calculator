@@ -5,19 +5,24 @@ export type BusinessType = 'service' | 'local';
 
 export interface Recommendations {
   pages: {
-    default: string[];
+    default: string[];      // locked, included in base £250
     optional: { group: string; items: string[] }[];
   };
   features: {
-    default: string[];
+    default: string[];      // suggestions only — NOT pre-selected in v2
     optional: string[];
+  };
+  // Migration pages: separate pool, no base £250
+  migrationPages: {
+    default: string[];
+    optional: { group: string; items: string[] }[];
   };
 }
 
 export const RECOMMENDATIONS: Record<BusinessType, Recommendations> = {
   service: {
     pages: {
-      default: ['home', 'about', 'services', 'contact', 'testimonials', 'pricing'],
+      default: ['home', 'about', 'services', 'contact'],
       optional: [
         { group: 'Marketing', items: ['gallery', 'team', 'faq'] },
         { group: 'Content', items: ['blog'] },
@@ -27,10 +32,17 @@ export const RECOMMENDATIONS: Record<BusinessType, Recommendations> = {
       default: ['analytics'],
       optional: ['newsletter', 'cms', 'ai-chatbot', 'user-accounts', 'multilang', 'booking', 'shopping-cart', 'social', 'email-management-dashboard'],
     },
+    migrationPages: {
+      default: ['home', 'about', 'services', 'contact'],
+      optional: [
+        { group: 'Marketing', items: ['gallery', 'team', 'faq', 'testimonials', 'pricing'] },
+        { group: 'Content', items: ['blog'] },
+      ],
+    },
   },
   local: {
     pages: {
-      default: ['home', 'about', 'services', 'contact', 'gallery', 'testimonials'],
+      default: ['home', 'about', 'services', 'contact'],
       optional: [
         { group: 'More info', items: ['team', 'faq', 'pricing'] },
         { group: 'Content', items: ['blog'] },
@@ -40,6 +52,13 @@ export const RECOMMENDATIONS: Record<BusinessType, Recommendations> = {
       default: ['analytics'],
       optional: ['newsletter', 'booking', 'cms', 'ai-chatbot', 'user-accounts', 'multilang', 'shopping-cart', 'social', 'email-management-dashboard'],
     },
+    migrationPages: {
+      default: ['home', 'about', 'services', 'contact'],
+      optional: [
+        { group: 'More info', items: ['gallery', 'team', 'faq', 'testimonials', 'pricing'] },
+        { group: 'Content', items: ['blog'] },
+      ],
+    },
   },
 };
 
@@ -47,15 +66,25 @@ export interface QuoteFlowState {
   currentStep: number;
   history: number[];
   businessType: BusinessType | null;
+
+  // Regular path: selectedPages tracks ONLY manually selected optional pages
+  // The 4 default pages are NOT stored here (they're included in base £250)
   selectedPages: string[];
-  selectedFeatures: string[];
+
+  // Migration path
   isMigration: boolean;
+  isRevamp: boolean;
+  migrationPageIds: string[];   // pages user wants to migrate (£50 each)
+
+  // Features: starts empty in v2 — suggestions only, NOT pre-selected
+  selectedFeatures: string[];
+
+  // Meta
   maintenancePlan: 'none' | 'basic' | 'standard';
 }
 
-export const TOTAL_FLOW_STEPS = 5; // 0=type, 1=pages, 2=features, 3=migration, 4=summary
-
-export const FLOW_STEP_LABELS = ['Type', 'Pages', 'Features', 'Migration', 'Review'];
+export const TOTAL_FLOW_STEPS = 6; // 0=type, 1=migration, 2=pages, 3=revamp, 4=features, 5=summary
+export const FLOW_STEP_LABELS = ['Type', 'Migration', 'Pages', 'Revamp', 'Features', 'Review'];
 
 export function getInitialState(): QuoteFlowState {
   return {
@@ -63,20 +92,18 @@ export function getInitialState(): QuoteFlowState {
     history: [],
     businessType: null,
     selectedPages: [],
-    selectedFeatures: [],
     isMigration: false,
+    isRevamp: false,
+    migrationPageIds: [],
+    selectedFeatures: [],
     maintenancePlan: 'none',
   };
 }
 
+// No longer used in v2 — features & pages are NOT auto-selected
+// Kept for any remaining references, but does nothing
 export function applyBusinessTypeDefaults(state: QuoteFlowState): QuoteFlowState {
-  if (!state.businessType) return state;
-  const recs = RECOMMENDATIONS[state.businessType];
-  return {
-    ...state,
-    selectedPages: [...recs.pages.default],
-    selectedFeatures: [...recs.features.default],
-  };
+  return state;
 }
 
 export function getPageItem(id: string) {
