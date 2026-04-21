@@ -13,8 +13,6 @@ interface BuilderPhaseProps {
   setSelectedPages: (v: string[]) => void;
   selectedFeatures: string[];
   setSelectedFeatures: (v: string[]) => void;
-  siteType: 'one-page' | 'multi-page';
-  setSiteType: (v: 'one-page' | 'multi-page') => void;
   livePrice: number;
   featureTotal: number;
   selectedPageItems: SelectionItem[];
@@ -33,7 +31,7 @@ const VARIANTS = (dir: 1 | -1) => ({
 
 export default function BuilderPhase({
   step, direction, selectedPages, setSelectedPages,
-  selectedFeatures, setSelectedFeatures, siteType, setSiteType,
+  selectedFeatures, setSelectedFeatures,
   livePrice, featureTotal,
   selectedPageItems, selectedFeatureItems,
   onPrev, onNext, canContinue, isMigration = false,
@@ -47,8 +45,7 @@ export default function BuilderPhase({
               <motion.div key="step1" custom={direction.current} variants={VARIANTS(direction.current)}
                 initial="enter" animate="center" exit="exit"
                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}>
-                <PageSelector selected={selectedPages} onChange={setSelectedPages}
-                  siteType={siteType} onSiteTypeChange={setSiteType} livePrice={livePrice} />
+                <PageSelector selected={selectedPages} onChange={setSelectedPages} livePrice={livePrice} />
               </motion.div>
             )}
             {step === 2 && (

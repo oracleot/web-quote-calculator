@@ -6,8 +6,6 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 interface PageSelectorProps {
   selected: string[];
   onChange: (selected: string[]) => void;
-  siteType: 'one-page' | 'multi-page';
-  onSiteTypeChange: (siteType: 'one-page' | 'multi-page') => void;
   livePrice?: number;
 }
 
@@ -131,9 +129,8 @@ function PageCard({
   );
 }
 
-export default function PageSelector({ selected, onChange, siteType, onSiteTypeChange, livePrice }: PageSelectorProps) {
+export default function PageSelector({ selected, onChange, livePrice }: PageSelectorProps) {
   const isMobile = useIsMobile();
-  const isOnePage = siteType === 'one-page';
 
   const togglePage = (id: string) => {
     if (selected.includes(id)) {
@@ -141,10 +138,6 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
     } else {
       onChange([...selected, id]);
     }
-  };
-
-  const handleSiteTypeChange = (type: 'one-page' | 'multi-page') => {
-    onSiteTypeChange(type);
   };
 
   // Get page objects by group
@@ -155,46 +148,21 @@ export default function PageSelector({ selected, onChange, siteType, onSiteTypeC
 
   return (
     <div>
-      {/* Site type toggle */}
+      {/* Pages info */}
       <div className="flex items-center gap-3 mb-6 px-1">
-        <span className="text-xs font-medium text-[var(--text-muted)]">Website type:</span>
-        <div className="flex bg-[var(--bg-elevated)] rounded-lg p-0.5 border border-[var(--border)]">
-          <button
-            onClick={() => handleSiteTypeChange('one-page')}
-            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
-              isOnePage
-                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            One page
-          </button>
-          <button
-            onClick={() => handleSiteTypeChange('multi-page')}
-            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
-              !isOnePage
-                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            Multi-page
-          </button>
-        </div>
-        <span className="ml-auto text-xs text-[var(--accent)] font-mono font-medium">£{livePrice ?? 250}</span>
+        <span className="text-xs text-[var(--accent)] font-mono font-medium">£{livePrice ?? 250}</span>
+        <span className="text-xs text-[var(--text-muted)]">First 4 pages included</span>
       </div>
 
-      {/* Pages info */}
       <div className="flex items-center gap-3 mb-5 px-1">
         <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
-          {isOnePage ? 'Choose sections for your landing page' : 'First 4 pages included'}
+Select the pages your website needs
         </div>
         <div className="ml-auto text-xs text-[var(--accent)] bg-[var(--accent-muted)] border border-[rgba(34,211,238,0.2)] rounded-full px-2.5 py-0.5 font-medium">
-          {isOnePage
-            ? `${selected.length} ${selected.length === 1 ? 'section' : 'sections'} selected`
-            : `${selected.length} selected`}
+          {`${selected.length} selected`}
         </div>
       </div>
 

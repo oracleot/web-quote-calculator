@@ -63,6 +63,7 @@ const FEATURE_ICONS: Record<string, React.ReactNode> = {
 
 export default function FeatureSelector({ selected, onChange }: FeatureSelectorProps) {
   const [showEmailFeatureInfo, setShowEmailFeatureInfo] = useState(false);
+  const [showSocialFeatureInfo, setShowSocialFeatureInfo] = useState(false);
 
   const toggleFeature = (id: string) => {
     if (selected.includes(id)) {
@@ -90,10 +91,19 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
         {FEATURES.map((feature) => {
           const isSelected = selected.includes(feature.id);
           const isEmailFeature = feature.id === 'email-management-dashboard';
-          const isExpanded = isEmailFeature && showEmailFeatureInfo;
+          const isSocialFeature = feature.id === 'social';
+          const isExpanded = isEmailFeature
+            ? showEmailFeatureInfo
+            : isSocialFeature
+              ? showSocialFeatureInfo
+              : false;
 
           return (
-            <div key={feature.id} className={`select-card ${isSelected ? 'selected' : ''}`}>
+            <div
+              key={feature.id}
+              data-testid={`feature-card-${feature.id}`}
+              className={`select-card ${isSelected ? 'selected' : ''}`}
+            >
               <button
                 type="button"
                 onClick={() => toggleFeature(feature.id)}
@@ -118,18 +128,24 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
                     <div className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">{feature.description}</div>
                   </div>
 
-                  <div className={`price-tag flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg ${isSelected ? '' : 'opacity-60'}`}>
+                  <div
+                    data-testid={`feature-price-${feature.id}`}
+                    className={`price-tag flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg ${isSelected ? '' : 'opacity-60'}`}
+                  >
                     +£{feature.price}
                   </div>
                 </div>
               </button>
 
-              {isEmailFeature && (
+              {(isEmailFeature || isSocialFeature) && (
                 <div className="px-4 pb-4">
                   <button
                     type="button"
                     aria-expanded={isExpanded}
-                    onClick={() => setShowEmailFeatureInfo((v) => !v)}
+                    onClick={() => {
+                      if (isEmailFeature) setShowEmailFeatureInfo((v) => !v);
+                      if (isSocialFeature) setShowSocialFeatureInfo((v) => !v);
+                    }}
                     className="text-xs text-[var(--accent)] hover:underline inline-flex items-center gap-1.5"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,11 +154,19 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
                     {isExpanded ? 'Hide details' : 'What’s included?'}
                   </button>
 
-                  {isExpanded && (
+                  {isExpanded && isEmailFeature && (
                     <ul className="mt-2 space-y-1 text-xs text-[var(--text-secondary)] list-disc pl-4">
                       <li>Centralized inbox and outbox in one dashboard</li>
                       <li>Compose and send emails directly from the dashboard</li>
                       <li>Search and filters across inbound and outbound messages</li>
+                    </ul>
+                  )}
+
+                  {isExpanded && isSocialFeature && (
+                    <ul className="mt-2 space-y-1 text-xs text-[var(--text-secondary)] list-disc pl-4">
+                      <li>Embedded Instagram/Facebook/X feed blocks on your website</li>
+                      <li>Automatic display of latest social posts without manual page edits</li>
+                      <li>Matched feed styling to fit your site design</li>
                     </ul>
                   )}
                 </div>

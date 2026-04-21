@@ -22,7 +22,7 @@ export const FEATURES = [
   { id: 'cms', label: 'CMS / Blog', price: 120, description: 'Manage your own content and articles' },
   { id: 'user-accounts', label: 'User Accounts', price: 120, description: 'Login, profiles, and saved data' },
   { id: 'newsletter', label: 'Newsletter Signup', price: 50, description: 'Email list collection' },
-  { id: 'social', label: 'Social Media Integration', price: 30, description: 'Connect your social profiles' },
+  { id: 'social', label: 'Social Feed Integration', price: 80, description: 'Embed live social feeds and recent social content updates on your website' },
   { id: 'analytics', label: 'Google Analytics', price: 25, description: 'Visitor tracking and reporting' },
   { id: 'multilang', label: 'Multi-language Support', price: 80, description: 'Localized content in multiple languages' },
   {

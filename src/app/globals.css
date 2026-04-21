@@ -651,20 +651,6 @@ body {
   overflow: hidden;
 }
 
-.builder-bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 30;
-  background: var(--bg-elevated);
-  border-top: 1px solid var(--border);
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .form-panel {
   background: var(--bg-elevated);
   border-left: 1px solid var(--border);
@@ -677,21 +663,9 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.light .builder-bottom-bar {
-  background: var(--bg-elevated);
-  border-top-color: rgba(9, 9, 11, 0.08);
-}
-
 .light .form-panel {
   background: var(--bg-elevated);
   border-left-color: rgba(9, 9, 11, 0.08);
-}
-
-/* Mobile bottom bar spacing */
-@media (max-width: 639px) {
-  .builder-layout-wrapper {
-    padding-bottom: 72px;
-  }
 }
 
 @media (max-width: 639px) {
