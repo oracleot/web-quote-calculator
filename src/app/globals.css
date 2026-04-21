@@ -462,6 +462,118 @@ body {
   z-index: 10;
 }
 
+/* ══════════════════════════════════════════════════
+   CONVERSATIONAL FLOW — chat bubble aesthetic
+   ══════════════════════════════════════════════════ */
+
+/* Assistant message bubble */
+.conv-assistant-msg {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px 12px 12px 4px;
+  padding: 14px 16px;
+}
+
+/* User selection confirmation bubble */
+.conv-user-confirm {
+  background: var(--accent-subtle);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 12px 12px 4px 12px;
+  padding: 10px 14px;
+}
+
+/* Business type option cards */
+.conv-type-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+
+.conv-type-card:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+  background: var(--bg-card-hover);
+}
+
+.conv-type-card.selected {
+  background: var(--accent-subtle);
+  border-color: rgba(34, 211, 238, 0.4);
+}
+
+/* Page / feature item in list */
+.conv-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: all 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.conv-item:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.conv-item.selected {
+  background: var(--accent-subtle);
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+.conv-item.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inline rationale chip */
+.conv-rationale-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  background: var(--accent-muted);
+  color: var(--accent);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+}
+
+/* Show more toggle */
+.conv-show-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  transition: color 0.15s ease;
+}
+
+.conv-show-more:hover {
+  color: var(--accent-hover);
+}
+
+/* Floating bottom nav bar */
+.conv-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--bg-base);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+}
+
 
 /* ══════════════════════════════════════════════════
    LIGHT THEME — same accent, unified personality
