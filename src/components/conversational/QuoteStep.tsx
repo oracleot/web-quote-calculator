@@ -555,17 +555,7 @@ function StepFeatures({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (p
         </button>
       )}
 
-      {/* What's Included? toggle for email/social features */}
-      {whatsIncluded && (
-        <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-sm text-[var(--text-secondary)]">
-          <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{whatsIncluded}</span>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

@@ -63,7 +63,12 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
   const goNext = useCallback(() => {
     setState((prev) => {
       const currentStep = prev.currentStep;
-      const nextStep = currentStep + 1;
+      let nextStep = currentStep + 1;
+      // Skip irrelevant steps based on migration path
+      // Non-migration: skip step 4 (Revamp, migration-only)
+      if (!prev.isMigration && nextStep === 4) {
+        nextStep = 5; // Skip to Summary
+      }
       const nextHistory = prev.history.includes(currentStep)
         ? prev.history
         : [...prev.history, currentStep];
@@ -74,7 +79,12 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
   const goBack = useCallback(() => {
     setState((prev) => {
       if (prev.currentStep === 0) return prev;
-      return { ...prev, currentStep: prev.currentStep - 1 };
+      let prevStep = prev.currentStep - 1;
+      // Skip irrelevant steps when going back
+      if (!prev.isMigration && prevStep === 4) {
+        prevStep = 3; // Skip Revamp step back to Features
+      }
+      return { ...prev, currentStep: prevStep };
     });
   }, []);
 
@@ -109,7 +119,9 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
   const canGoNext = state.currentStep < TOTAL_FLOW_STEPS;
   const isLastStep = state.currentStep === TOTAL_FLOW_STEPS;
 
-  const stepLabels = ['Business Type', 'Migration?', 'Pages', 'Revamp?', 'Features', 'Summary'];
+  const stepLabels = state.isMigration
+    ? ['Business Type', 'Migration?', 'Pages', 'Revamp?', 'Features', 'Summary']
+    : ['Business Type', 'Migration?', 'Pages', 'Features', 'Summary'];
 
   const handleBusinessTypeSelect = useCallback((type: BusinessType) => {
     setState((prev) => ({
