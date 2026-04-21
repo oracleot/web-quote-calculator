@@ -12,6 +12,7 @@ interface QuoteStepProps {
   state: QuoteFlowState;
   onUpdate: (partial: Partial<QuoteFlowState>) => void;
   onNext: () => void;
+  onBack: () => void;
   onBusinessTypeSelect?: (type: BusinessType) => void;
 }
 
