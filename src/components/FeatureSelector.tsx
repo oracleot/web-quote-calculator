@@ -93,11 +93,11 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
           const isExpanded = isEmailFeature && showEmailFeatureInfo;
 
           return (
-            <div key={feature.id} className={`select-card p-4 ${isSelected ? 'selected' : ''}`}>
+            <div key={feature.id} className={`select-card ${isSelected ? 'selected' : ''}`}>
               <button
                 type="button"
                 onClick={() => toggleFeature(feature.id)}
-                className="w-full text-left"
+                className="w-full text-left p-4"
               >
                 <div className="flex items-center gap-3">
                   <div className={`checkbox flex-shrink-0 ${isSelected ? 'checked' : ''}`}>
@@ -125,7 +125,7 @@ export default function FeatureSelector({ selected, onChange }: FeatureSelectorP
               </button>
 
               {isEmailFeature && (
-                <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                <div className="px-4 pb-4 mt-3 pt-3 border-t border-[var(--border)]">
                   <button
                     type="button"
                     aria-expanded={isExpanded}
