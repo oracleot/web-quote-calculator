@@ -22,6 +22,14 @@ describe('QuoteSummary', () => {
     expect(priceText).toBeDefined();
   });
 
+  it('uses £80 for social feed integration in summary and totals', () => {
+    render(<QuoteSummary selectedPageIds={['home']} selectedFeatureIds={['social']} siteType="multi-page" />);
+
+    expect(screen.getAllByText('Social Feed Integration').length).toBeGreaterThan(0);
+    expect(screen.getByText((content) => content.includes('£80'))).toBeDefined();
+    expect(screen.getByText('£330')).toBeDefined(); // £250 base + £80 social feed
+  });
+
   it('calculates extra pages correctly', () => {
     // 6 pages: 4 included + 2 extra (£100)
     render(<QuoteSummary selectedPageIds={['home', 'about', 'services', 'contact', 'gallery', 'testimonials']} selectedFeatureIds={[]} siteType="multi-page" />);

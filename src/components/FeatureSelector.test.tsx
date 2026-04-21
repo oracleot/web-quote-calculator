@@ -14,6 +14,7 @@ describe('FeatureSelector', () => {
     expect(screen.getByText('AI Chatbot')).toBeDefined();
     expect(screen.getByText('Shopping Cart + Payments')).toBeDefined();
     expect(screen.getByText('Booking / Reservations')).toBeDefined();
+    expect(screen.getByText('Social Feed Integration')).toBeDefined();
     expect(screen.getByText('Email Management Dashboard')).toBeDefined();
   });
 
@@ -36,9 +37,10 @@ describe('FeatureSelector', () => {
     expect(mockOnChange).toHaveBeenCalledWith([]);
   });
 
-  it('displays feature prices including email dashboard', () => {
+  it('displays feature prices including social feed and email dashboard', () => {
     render(<FeatureSelector selected={[]} onChange={mockOnChange} />);
     expect(screen.getByText('+£100')).toBeDefined(); // AI Chatbot price
+    expect(screen.getAllByText('+£80').length).toBeGreaterThan(0); // Social Feed Integration price
     expect(screen.getByText('+£150')).toBeDefined(); // Email Management Dashboard price
   });
 
@@ -51,5 +53,15 @@ describe('FeatureSelector', () => {
     expect(screen.getByText(/Centralized inbox and outbox/i)).toBeDefined();
     expect(screen.getByText(/Compose and send emails directly/i)).toBeDefined();
     expect(screen.getByText(/Search and filters across inbound and outbound messages/i)).toBeDefined();
+  });
+
+  it('calls onChange with social feature and reflects +£80 pricing in the card', () => {
+    render(<FeatureSelector selected={[]} onChange={mockOnChange} />);
+
+    const socialFeatureButton = screen.getByRole('button', { name: /Social Feed Integration/i });
+    fireEvent.click(socialFeatureButton);
+
+    expect(mockOnChange).toHaveBeenCalledWith(['social']);
+    expect(screen.getAllByText('+£80').length).toBeGreaterThan(0);
   });
 });

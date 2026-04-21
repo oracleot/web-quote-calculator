@@ -1,48 +1,39 @@
-# SPEC: SUL-87 — Email Management Dashboard (£150)
+# SPEC: SUL-86 — Social Feed Integration (£80)
 
 ## Goal
-Add a new paid add-on to the quote calculator:
-- **Name:** Email Management Dashboard
-- **Price:** **£150**
+Update the existing social add-on so it is sold as:
+- **Name:** Social Feed Integration
+- **Price:** **£80**
 
-This add-on should be selectable in the feature step, included in all pricing and summaries, and clearly explain what the client gets.
+This should replace the current lower-priced social integration option everywhere the quote UI and pricing summaries show feature data.
 
 ## Requirements
 
-### 1) Add-on in feature selector
-- Add `email-management-dashboard` to `FEATURES` in `src/lib/pricing.ts`
-- Label: `Email Management Dashboard`
-- Price: `150`
-- Description should explain this includes:
-  - centralized inbox/outbox
-  - compose/send emails
-  - search & filter tools
+### 1) Update pricing source of truth
+- In `src/lib/pricing.ts`, update existing `social` feature entry:
+  - Label: `Social Feed Integration`
+  - Price: `80`
+  - Description: clarify this is embedded social feeds/content updates on site
 
-### 2) Explain details on the card
-- In `FeatureSelector.tsx`, add an info mechanism for this card:
-  - either info icon + expandable panel OR native `<details>` block
-- Must be visible on desktop and mobile
-- Should not break existing click-to-select behavior
+### 2) Propagate through UI automatically
+- Ensure the updated social feature text and price appear in:
+  - Feature selector cards
+  - Quote summary breakdown
+  - Sidebar / bottom-sheet selected items
+  - Invoice-related feature pickers that consume `FEATURES`
 
-### 3) Quote calculation + review
-- Ensure selecting this add-on contributes £150 through existing pricing pipeline
-- Ensure it appears in:
-  - Quote breakdown
-  - Selected add-ons chips
-  - Sidebar/bottom-sheet selection lists
-
-### 4) Tests
-- Update/add tests in `FeatureSelector.test.tsx` and any impacted tests
-- Confirm this feature renders and is priced correctly in UI where applicable
+### 3) Tests
+- Update `FeatureSelector.test.tsx` assertions to reflect the new social feature label/price
+- Add/adjust a quote-related test to verify social feature pricing contributes **£80**
 
 ## Non-goals
-- Building a real email dashboard product
-- Backend email integration
-- Any new API routes
+- Building real-time social API syncing
+- New backend endpoints
+- Changes to non-social add-on pricing
 
 ## Validation
-1. `npm run build`
-2. `npx vitest run`
+1. `npx vitest run`
+2. `npm run build`
 
 ## Expected Outcome
-Users can select **Email Management Dashboard** as an add-on, see exactly what it includes, and receive accurate quote totals including **+£150**.
+Users see **Social Feed Integration (+£80)** consistently throughout the product, and quote totals include the correct +£80 when selected.
