@@ -16,31 +16,52 @@ import {
   saveInvoice,
   deleteInvoice,
 } from '@/lib/invoice';
-import { BASE_PRICE, PAGES, FEATURES, MIGRATION_FEE, PRICE_PER_EXTRA_PAGE } from '@/lib/pricing';
+import { BASE_PRICE, FEATURES, MIGRATION_FEE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE } from '@/lib/pricing';
+import { buildMigrationPagesLabel } from '@/lib/quote-billing';
 
 function buildInvoiceFromParams(params: URLSearchParams): Partial<Invoice> | null {
   if (params.get('from') !== 'quote') return null;
 
   const lineItems: InvoiceLineItem[] = [];
 
-  const pageIds = params.get('pages')?.split(',').filter(Boolean) ?? [];
+  const standardPageIds = params.get('pages')?.split(',').filter(Boolean) ?? [];
+  const migrationPageIds = params.get('migrationPages')?.split(',').filter(Boolean) ?? [];
   const featureIds = params.get('features')?.split(',').filter(Boolean) ?? [];
   const isMigration = params.get('migration') === 'true';
+  const isRevamp = params.get('revamp') === 'true';
   const maintenance = params.get('maintenance');
 
-  // Base price
-  const basePrice = isMigration && pageIds.length === 0 ? 0 : BASE_PRICE;
-  if (basePrice > 0) {
-    lineItems.push({ id: generateId(), description: 'Website Build — Base Price', quantity: 1, unitPrice: basePrice });
+  // Legacy compatibility: for older links migration pages may come through `pages`
+  const pageIds = isMigration
+    ? (migrationPageIds.length > 0 ? migrationPageIds : standardPageIds)
+    : standardPageIds;
+
+  // Base price only applies to non-migration builds
+  if (!isMigration) {
+    lineItems.push({ id: generateId(), description: 'Website Build — Base Price', quantity: 1, unitPrice: BASE_PRICE });
   }
 
   // Pages
-  pageIds.forEach((pid) => {
-    const page = PAGES.find((p) => p.id === pid);
-    if (page) {
-      lineItems.push({ id: generateId(), description: `Page: ${page.label}`, quantity: 1, unitPrice: PRICE_PER_EXTRA_PAGE });
+  if (isMigration) {
+    if (pageIds.length > 0) {
+      lineItems.push({
+        id: generateId(),
+        description: buildMigrationPagesLabel(pageIds.length),
+        quantity: 1,
+        unitPrice: pageIds.length * PRICE_PER_EXTRA_PAGE,
+      });
     }
-  });
+  } else {
+    const extraPageCount = Math.max(pageIds.length - PAGES_INCLUDED, 0);
+    if (extraPageCount > 0) {
+      lineItems.push({
+        id: generateId(),
+        description: `Extra Pages (${extraPageCount} × £${PRICE_PER_EXTRA_PAGE})`,
+        quantity: 1,
+        unitPrice: extraPageCount * PRICE_PER_EXTRA_PAGE,
+      });
+    }
+  }
 
   // Features
   featureIds.forEach((fid) => {
@@ -53,6 +74,11 @@ function buildInvoiceFromParams(params: URLSearchParams): Partial<Invoice> | nul
   // Migration fee
   if (isMigration) {
     lineItems.push({ id: generateId(), description: 'Site Migration Fee', quantity: 1, unitPrice: MIGRATION_FEE });
+  }
+
+  // Revamp fee
+  if (isMigration && isRevamp) {
+    lineItems.push({ id: generateId(), description: 'Website Revamp Fee', quantity: 1, unitPrice: 100 });
   }
 
   // Maintenance plan

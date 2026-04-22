@@ -42,20 +42,24 @@ export function calculateQuote(
 ) {
   const pageCount = selectedPageIds.length;
 
-  // Base price (£250) applies to new builds OR migrations that include pages
-  // For migration with 0 pages: only migration fee applies (content transfer included)
-  const basePrice = options?.isMigration && selectedPageIds.length === 0 ? 0 : BASE_PRICE;
+  const isMigration = Boolean(options?.isMigration);
 
-  // Extra pages beyond the 4 included
-  const extraPages = pageCount > PAGES_INCLUDED ? pageCount - PAGES_INCLUDED : 0;
-  const pagesCost = extraPages * PRICE_PER_EXTRA_PAGE;
+    // Base price only applies to new builds.
+  const basePrice = isMigration ? 0 : BASE_PRICE;
+
+  // New builds: first 4 pages are included, then +£50/page.
+  // Migrations: every selected migration page is +£50/page.
+  const extraPages = isMigration ? 0 : (pageCount > PAGES_INCLUDED ? pageCount - PAGES_INCLUDED : 0);
+  const pagesCost = isMigration
+    ? pageCount * PRICE_PER_EXTRA_PAGE
+    : extraPages * PRICE_PER_EXTRA_PAGE;
 
   const featuresCost = selectedFeatureIds.reduce((total, id) => {
     const feature = FEATURES.find((f) => f.id === id);
     return total + (feature?.price ?? 0);
   }, 0);
 
-  const migrationFee = options?.isMigration ? MIGRATION_FEE : 0;
+  const migrationFee = isMigration ? MIGRATION_FEE : 0;
   const total = basePrice + pagesCost + featuresCost + migrationFee;
 
   return {
