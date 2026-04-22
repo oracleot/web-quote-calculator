@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FEATURES, PAGES, BASE_PRICE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE, MIGRATION_FEE, calculateQuote } from '@/lib/pricing';
+import { FEATURES, PAGES, BASE_PRICE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE, MIGRATION_FEE } from '@/lib/pricing';
+import { buildInvoiceQuery, buildQuotePricing } from '@/lib/quote-billing';
 import type { QuoteFlowState, BusinessType } from './recommendations';
 import { RECOMMENDATIONS, isDefaultPage } from './recommendations';
 import PriceRationale from './PriceRationale';
@@ -583,13 +584,8 @@ function StepFeatures({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (p
 
 // ─── Step 5: Summary ───
 function StepSummary({ state, onGoToStep }: { state: QuoteFlowState; onGoToStep: (step: number) => void }) {
-  let quote;
-  if (state.isMigration) {
-    quote = calculateQuote(state.migrationPageIds, state.selectedFeatures, { isMigration: true });
-    quote.total += state.isRevamp ? 100 : 0;
-  } else {
-    quote = calculateQuote(state.selectedPages, state.selectedFeatures, { isMigration: false });
-  }
+  const quote = buildQuotePricing(state);
+  const invoiceHref = buildInvoiceQuery(state);
 
   const selectedPages = PAGES.filter((p) => state.selectedPages.includes(p.id));
   const selectedFeatures = FEATURES.filter((f) => state.selectedFeatures.includes(f.id));
@@ -708,29 +704,17 @@ function StepSummary({ state, onGoToStep }: { state: QuoteFlowState; onGoToStep:
         <PriceRationale state={state} />
       </div>
 
-      {/* Summary CTAs */}
-      <div className="flex gap-3 pt-2">
+      {/* Summary CTA */}
+      <div className="pt-2">
         <a
-          href="/invoice"
-          className="flex-1 btn-primary text-center flex items-center justify-center gap-2"
+          href={invoiceHref}
+          className="w-full btn-primary text-center flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
           </svg>
           Generate Invoice
         </a>
-        <button
-          onClick={() => {
-            // Trigger the "Get My Quote" via parent — scroll to bottom nav
-            document.querySelector<HTMLButtonElement>('.fixed.bottom-0 button.btn-primary')?.click();
-          }}
-          className="flex-1 btn-secondary text-center flex items-center justify-center gap-2"
-        >
-          Get a Quote
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
       </div>
     </div>
   );

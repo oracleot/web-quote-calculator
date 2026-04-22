@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { calculateQuote } from '@/lib/pricing';
+import { buildQuotePricing } from '@/lib/quote-billing';
 import type { QuoteFlowState, BusinessType } from './recommendations';
 import { TOTAL_FLOW_STEPS, getInitialState } from './recommendations';
 import QuoteStep from './QuoteStep';
@@ -102,16 +102,9 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
       return { total: 0, hasBusinessType: false };
     }
 
-    let quote;
-    if (state.isMigration) {
-      quote = calculateQuote(state.migrationPageIds, state.selectedFeatures, { isMigration: true });
-    } else {
-      quote = calculateQuote(state.selectedPages, state.selectedFeatures, { isMigration: false });
-    }
-
-    const revampFee = state.isRevamp ? 100 : 0;
+    const quote = buildQuotePricing(state);
     return {
-      total: quote.total + revampFee,
+      total: quote.total,
       hasBusinessType: true,
     };
   }, [state]);

@@ -360,7 +360,7 @@ describe('QuoteFlow v2', () => {
     expect(screen.getByText(/Your Estimate/i)).toBeInTheDocument();
   });
 
-  it('summary shows Generate Invoice and Get a Quote CTAs', async () => {
+  it('summary shows only Generate Invoice CTA', async () => {
     const user = userEvent.setup();
     renderQuoteFlow();
 
@@ -384,9 +384,13 @@ describe('QuoteFlow v2', () => {
       });
     }
 
-    // Check for CTAs on summary
-    expect(screen.getByText('Generate Invoice')).toBeInTheDocument();
-    expect(screen.getByText('Get a Quote')).toBeInTheDocument();
+    // Check CTA on summary
+    const generateInvoice = screen.getByRole('link', { name: /generate invoice/i });
+    expect(generateInvoice).toBeInTheDocument();
+    expect(generateInvoice).toHaveAttribute('href', expect.stringContaining('/invoice?'));
+    expect(generateInvoice).toHaveAttribute('href', expect.stringContaining('from=quote'));
+
+    expect(screen.queryByText('Get a Quote')).not.toBeInTheDocument();
   });
 
   // ── Show More ────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 'use client';
 
-import { FEATURES, BASE_PRICE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE, MIGRATION_FEE } from '@/lib/pricing';
+import { FEATURES, BASE_PRICE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE } from '@/lib/pricing';
+import { buildQuotePricing } from '@/lib/quote-billing';
 import type { QuoteFlowState } from './recommendations';
 
 interface PriceRationaleProps {
@@ -8,25 +9,28 @@ interface PriceRationaleProps {
 }
 
 export default function PriceRationale({ state }: PriceRationaleProps) {
-  const { selectedPages, selectedFeatures, isMigration } = state;
-  const pageCount = selectedPages.length;
-  const extraPages = pageCount > PAGES_INCLUDED ? pageCount - PAGES_INCLUDED : 0;
-  const featuresCost = selectedFeatures.reduce((sum, id) => sum + (FEATURES.find((f) => f.id === id)?.price ?? 0), 0);
-  const migrationFee = isMigration ? MIGRATION_FEE : 0;
+  const { selectedFeatures, isMigration } = state;
+  const pricing = buildQuotePricing(state);
+  const pageCount = pricing.pageCount;
+  const extraPages = pricing.extraPages;
+  const featuresCost = pricing.featuresCost;
+  const migrationFee = pricing.migrationFee;
 
   return (
     <div className="space-y-2 text-sm">
       {/* Base price */}
-      <div className="flex items-start gap-2">
-        <svg className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        <div>
-          <span className="text-[var(--text-secondary)]">Base website package: </span>
-          <span className="font-mono font-medium text-[var(--text-primary)]">£{BASE_PRICE}</span>
-          <span className="text-[var(--text-muted)]"> — includes up to {PAGES_INCLUDED} pages</span>
+      {!isMigration && (
+        <div className="flex items-start gap-2">
+          <svg className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <div>
+            <span className="text-[var(--text-secondary)]">Base website package: </span>
+            <span className="font-mono font-medium text-[var(--text-primary)]">£{BASE_PRICE}</span>
+            <span className="text-[var(--text-muted)]"> — includes up to {PAGES_INCLUDED} pages</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Pages explanation */}
       {pageCount > 0 && (
@@ -35,7 +39,12 @@ export default function PriceRationale({ state }: PriceRationaleProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <div>
-            {pageCount <= PAGES_INCLUDED ? (
+            {isMigration ? (
+              <>
+                <span className="text-[var(--text-secondary)]">Migration pages ({pageCount} × £{PRICE_PER_EXTRA_PAGE}): </span>
+                <span className="font-mono font-medium text-[var(--accent)]">+£{pricing.pagesCost}</span>
+              </>
+            ) : pageCount <= PAGES_INCLUDED ? (
               <>
                 <span className="text-[var(--text-secondary)]">{pageCount} page{pageCount !== 1 ? 's' : ''} selected: </span>
                 <span className="text-[var(--text-muted)]">all included in base price</span>
@@ -43,7 +52,7 @@ export default function PriceRationale({ state }: PriceRationaleProps) {
             ) : (
               <>
                 <span className="text-[var(--text-secondary)]">{pageCount} pages selected ({extraPages} extra): </span>
-                <span className="font-mono font-medium text-[var(--accent)]">+£{extraPages * PRICE_PER_EXTRA_PAGE}</span>
+                <span className="font-mono font-medium text-[var(--accent)]">+£{pricing.pagesCost}</span>
                 <span className="text-[var(--text-muted)]"> ({extraPages} × £{PRICE_PER_EXTRA_PAGE})</span>
               </>
             )}
@@ -93,7 +102,7 @@ export default function PriceRationale({ state }: PriceRationaleProps) {
         </div>
       )}
 
-      {selectedPages.length === 0 && selectedFeatures.length === 0 && !isMigration && (
+      {pageCount === 0 && selectedFeatures.length === 0 && !isMigration && (
         <div className="flex items-start gap-2">
           <svg className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
