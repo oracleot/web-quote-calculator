@@ -96,30 +96,59 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
     }));
   }, []);
 
+  const visibleProgressSteps = useMemo(
+    () => (state.isMigration
+      ? [
+          { step: 0, label: 'Type' },
+          { step: 1, label: 'Migration' },
+          { step: 2, label: 'Pages' },
+          { step: 3, label: 'Revamp' },
+          { step: 4, label: 'Features' },
+          { step: 5, label: 'Summary' },
+        ]
+      : [
+          { step: 0, label: 'Type' },
+          { step: 1, label: 'Migration' },
+          { step: 2, label: 'Pages' },
+          { step: 3, label: 'Features' },
+          { step: 5, label: 'Summary' },
+        ]),
+    [state.isMigration]
+  );
+
   // Compute the live price for the counter
   const liveQuote = useMemo(() => {
-    if (!state.businessType) {
-      return { total: 0, hasBusinessType: false };
+    if (!state.businessType || !state.migrationChoiceMade) {
+      return { total: 0, showQuote: false };
     }
 
     const quote = buildQuotePricing(state);
     return {
       total: quote.total,
-      hasBusinessType: true,
+      showQuote: true,
     };
   }, [state]);
 
   const canGoNext =
     state.currentStep < TOTAL_FLOW_STEPS
-    && (state.currentStep !== 0 || Boolean(state.businessType));
+    && (state.currentStep !== 0 || Boolean(state.businessType))
+    && (state.currentStep !== 1 || state.migrationChoiceMade);
   const isLastStep = state.currentStep === TOTAL_FLOW_STEPS;
 
-  const stepLabels = ['Business Type', 'Migration?', 'Pages', 'Revamp?', 'Features', 'Summary'];
+  const currentVisibleStepIndex = Math.max(
+    visibleProgressSteps.findIndex(({ step }) => step === state.currentStep),
+    0
+  );
 
   const handleBusinessTypeSelect = useCallback((type: BusinessType) => {
     setState((prev) => ({
       ...prev,
       businessType: type,
+      isMigration: false,
+      migrationChoiceMade: false,
+      isRevamp: false,
+      selectedPages: [],
+      migrationPageIds: [],
       history: prev.history.includes(0) ? prev.history : [...prev.history, 0],
     }));
   }, []);
@@ -132,7 +161,7 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
   return (
     <div className="max-w-2xl mx-auto">
       {/* Live price counter + progress */}
-      <div className="sticky top-0 z-10 bg-[var(--bg-base)] border-b border-[var(--border)] px-4 py-3 mb-6">
+      <div className="sticky top-0 z-10 bg-[var(--bg-base)] px-4 py-3 mb-6">
         <div className="flex items-center justify-between gap-4">
           {/* Price */}
           <div className="flex items-baseline gap-1.5">
@@ -143,7 +172,7 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
               animate={{ opacity: 1, y: 0 }}
               className="text-xl font-bold font-mono text-[var(--text-primary)]"
             >
-              {liveQuote.hasBusinessType ? `£${liveQuote.total}` : '£—'}
+              {liveQuote.showQuote ? `£${liveQuote.total}` : '£—'}
             </motion.span>
           </div>
 
@@ -153,6 +182,7 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
               currentStep={state.currentStep}
               history={state.history}
               onGoToStep={goToStep}
+              steps={visibleProgressSteps}
             />
           </div>
         </div>
@@ -163,6 +193,7 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
             currentStep={state.currentStep}
             history={state.history}
             onGoToStep={goToStep}
+            steps={visibleProgressSteps}
           />
         </div>
       </div>
@@ -213,8 +244,8 @@ export default function QuoteFlow({ onProceedToForm }: QuoteFlowProps) {
           {/* Current step label */}
           <div className="text-center flex-1">
             <span className="text-sm text-[var(--text-muted)]">
-              Step {state.currentStep + 1} of {TOTAL_FLOW_STEPS + 1}:{' '}
-              <span className="text-[var(--text-secondary)]">{stepLabels[state.currentStep]}</span>
+              Step {currentVisibleStepIndex + 1} of {visibleProgressSteps.length}:{' '}
+              <span className="text-[var(--text-secondary)]">{visibleProgressSteps[currentVisibleStepIndex]?.label ?? '—'}</span>
             </span>
           </div>
 

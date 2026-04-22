@@ -16,7 +16,7 @@ import {
   saveInvoice,
   deleteInvoice,
 } from '@/lib/invoice';
-import { BASE_PRICE, PAGES, FEATURES, MIGRATION_FEE, PRICE_PER_EXTRA_PAGE } from '@/lib/pricing';
+import { BASE_PRICE, FEATURES, MIGRATION_FEE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE } from '@/lib/pricing';
 import { buildMigrationPagesLabel } from '@/lib/quote-billing';
 
 function buildInvoiceFromParams(params: URLSearchParams): Partial<Invoice> | null {
@@ -52,12 +52,15 @@ function buildInvoiceFromParams(params: URLSearchParams): Partial<Invoice> | nul
       });
     }
   } else {
-    pageIds.forEach((pid) => {
-      const page = PAGES.find((p) => p.id === pid);
-      if (page) {
-        lineItems.push({ id: generateId(), description: `Page: ${page.label}`, quantity: 1, unitPrice: PRICE_PER_EXTRA_PAGE });
-      }
-    });
+    const extraPageCount = Math.max(pageIds.length - PAGES_INCLUDED, 0);
+    if (extraPageCount > 0) {
+      lineItems.push({
+        id: generateId(),
+        description: `Extra Pages (${extraPageCount} × £${PRICE_PER_EXTRA_PAGE})`,
+        quantity: 1,
+        unitPrice: extraPageCount * PRICE_PER_EXTRA_PAGE,
+      });
+    }
   }
 
   // Features

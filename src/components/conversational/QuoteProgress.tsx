@@ -1,31 +1,35 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { FLOW_STEP_LABELS } from './recommendations';
+
+interface QuoteProgressStep {
+  step: number;
+  label: string;
+}
 
 interface QuoteProgressProps {
   currentStep: number;
   history: number[];
   onGoToStep: (step: number) => void;
+  steps: QuoteProgressStep[];
 }
 
-export default function QuoteProgress({ currentStep, history, onGoToStep }: QuoteProgressProps) {
-  const lastStepIndex = FLOW_STEP_LABELS.length - 1;
+export default function QuoteProgress({ currentStep, history, onGoToStep, steps }: QuoteProgressProps) {
   const visitedSet = new Set([0, currentStep, ...history]);
 
   return (
     <div className="w-full">
       {/* Step dots + labels */}
       <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1">
-        {Array.from({ length: FLOW_STEP_LABELS.length }, (_, i) => {
-          const isActive = i === currentStep;
-          const isVisited = visitedSet.has(i);
+        {steps.map(({ step, label }, index) => {
+          const isActive = step === currentStep;
+          const isVisited = visitedSet.has(step);
 
           return (
-            <div key={i} className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <div key={step} className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {/* Step dot */}
               <button
-                onClick={() => isVisited && onGoToStep(i)}
+                onClick={() => isVisited && onGoToStep(step)}
                 disabled={!isVisited}
                 className={`
                   flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold
@@ -37,8 +41,8 @@ export default function QuoteProgress({ currentStep, history, onGoToStep }: Quot
                       : 'bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-muted)] cursor-not-allowed'
                   }
                 `}
-                title={FLOW_STEP_LABELS[i]}
-                aria-label={isActive ? `Step ${i + 1}: ${FLOW_STEP_LABELS[i]} (current)` : isVisited ? `Step ${i + 1}: ${FLOW_STEP_LABELS[i]} (click to edit)` : `Step ${i + 1}: ${FLOW_STEP_LABELS[i]} (not reached)`}
+                title={label}
+                aria-label={isActive ? `Step ${index + 1}: ${label} (current)` : isVisited ? `Step ${index + 1}: ${label} (click to edit)` : `Step ${index + 1}: ${label} (not reached)`}
               >
                 {isActive ? (
                   <motion.span
@@ -51,12 +55,12 @@ export default function QuoteProgress({ currentStep, history, onGoToStep }: Quot
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
-                  <span>{i + 1}</span>
+                  <span>{index + 1}</span>
                 )}
               </button>
 
               {/* Connector line */}
-              {i < lastStepIndex && (
+              {index < steps.length - 1 && (
                 <div className={`w-4 sm:w-6 h-px flex-shrink-0 ${isVisited ? 'bg-[rgba(34,211,238,0.3)]' : 'bg-[var(--border)]'}`} />
               )}
             </div>
@@ -66,12 +70,12 @@ export default function QuoteProgress({ currentStep, history, onGoToStep }: Quot
 
       {/* Labels */}
       <div className="flex items-center gap-1 sm:gap-2 mt-2 overflow-x-auto">
-        {FLOW_STEP_LABELS.map((label, i) => {
-          const isActive = i === currentStep;
-          const isVisited = visitedSet.has(i);
+        {steps.map(({ step, label }) => {
+          const isActive = step === currentStep;
+          const isVisited = visitedSet.has(step);
           return (
             <span
-              key={i}
+              key={step}
               className={`
                 text-xs whitespace-nowrap flex-shrink-0 transition-colors duration-200
                 ${isActive ? 'text-[var(--accent)] font-semibold' : isVisited ? 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)]'}

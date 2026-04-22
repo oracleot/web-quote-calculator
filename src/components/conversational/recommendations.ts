@@ -73,6 +73,7 @@ export interface QuoteFlowState {
 
   // Migration path
   isMigration: boolean;
+  migrationChoiceMade: boolean;
   isRevamp: boolean;
   migrationPageIds: string[];   // pages user wants to migrate (£50 each)
 
@@ -93,6 +94,7 @@ export function getInitialState(): QuoteFlowState {
     businessType: null,
     selectedPages: [],
     isMigration: false,
+    migrationChoiceMade: false,
     isRevamp: false,
     migrationPageIds: [],
     selectedFeatures: [],

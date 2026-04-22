@@ -79,7 +79,20 @@ describe('QuoteFlow v2', () => {
     expect(screen.getByText('No')).toBeInTheDocument();
   });
 
-  it('shows migration fee (+£100) when Yes is selected', async () => {
+  it('shows migration option prices (+£250 for No, +£100 for Yes)', async () => {
+    const user = userEvent.setup();
+    renderQuoteFlow();
+
+    await act(async () => {
+      await user.click(screen.getByText('Service Business'));
+      await new Promise((r) => setTimeout(r, 500));
+    });
+
+    expect(screen.getByText(/\+£250/i)).toBeInTheDocument();
+    expect(screen.getByText(/\+£100/i)).toBeInTheDocument();
+  });
+
+  it('updates quote immediately when switching between No and Yes on migration step', async () => {
     const user = userEvent.setup();
     renderQuoteFlow();
 
@@ -89,11 +102,30 @@ describe('QuoteFlow v2', () => {
     });
 
     await act(async () => {
+      await user.click(screen.getByText('No'));
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    expect(screen.getByText('£250')).toBeInTheDocument();
+
+    await act(async () => {
       await user.click(screen.getByText('Yes'));
       await new Promise((r) => setTimeout(r, 100));
     });
 
-    expect(screen.getByText(/\+£100/i)).toBeInTheDocument();
+    expect(screen.getByText('£100')).toBeInTheDocument();
+  });
+
+  it('keeps quote hidden on migration step until user selects Yes/No', async () => {
+    const user = userEvent.setup();
+    renderQuoteFlow();
+
+    await act(async () => {
+      await user.click(screen.getByText('Service Business'));
+      await new Promise((r) => setTimeout(r, 500));
+    });
+
+    expect(screen.getByText('£—')).toBeInTheDocument();
   });
 
   // ── Step 2: Non-migration Pages ────────────────────────────────────────
@@ -168,7 +200,7 @@ describe('QuoteFlow v2', () => {
       await new Promise((r) => setTimeout(r, 300));
     });
 
-    expect(screen.getByText(/Which pages from your old site/i)).toBeInTheDocument();
+    expect(screen.getByText(/Do you want to add extra pages to your old site pages\?/i)).toBeInTheDocument();
   });
 
   // ── Step 3: Revamp (migration path only) ────────────────────────────────

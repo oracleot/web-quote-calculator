@@ -44,7 +44,7 @@ export function calculateQuote(
 
   const isMigration = Boolean(options?.isMigration);
 
-  // Base price only applies to new builds.
+    // Base price only applies to new builds.
   const basePrice = isMigration ? 0 : BASE_PRICE;
 
   // New builds: first 4 pages are included, then +£50/page.

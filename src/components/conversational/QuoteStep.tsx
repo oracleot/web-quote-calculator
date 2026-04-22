@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FEATURES, PAGES, BASE_PRICE, PAGES_INCLUDED, PRICE_PER_EXTRA_PAGE, MIGRATION_FEE } from '@/lib/pricing';
 import { buildInvoiceQuery, buildQuotePricing } from '@/lib/quote-billing';
 import type { QuoteFlowState, BusinessType } from './recommendations';
-import { RECOMMENDATIONS, isDefaultPage } from './recommendations';
+import { RECOMMENDATIONS } from './recommendations';
 import PriceRationale from './PriceRationale';
 
 interface QuoteStepProps {
@@ -137,23 +137,39 @@ function StepBusinessType({ state, onBusinessTypeSelect, onNext }: { state: Quot
 
 // ─── Step 1: Migration? ───
 function StepMigration({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (partial: Partial<QuoteFlowState>) => void }) {
+  const handleSelect = (isMigration: boolean) => {
+    if (!state.businessType) return;
+
+    const partial: Partial<QuoteFlowState> = {
+      isMigration,
+      migrationChoiceMade: true,
+    };
+
+    // First time user selects "No", preselect recommended pages but keep them editable.
+    if (!isMigration && state.selectedPages.length === 0) {
+      partial.selectedPages = [...RECOMMENDATIONS[state.businessType].pages.default];
+    }
+
+    onUpdate(partial);
+  };
+
   return (
     <div className="space-y-4">
       <div className="p-4 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-muted)]">
         <p className="text-[var(--text-primary)] font-medium">Are you migrating an existing site?</p>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Migration includes a full audit, content transfer, and redirect setup.
+          Choose one so we can apply the right base price before pages/features.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         {[false, true].map((value) => {
-          const isSelected = state.isMigration === value;
+          const isSelected = state.migrationChoiceMade && state.isMigration === value;
           const label = value ? 'Yes' : 'No';
           return (
             <button
               key={String(value)}
-              onClick={() => onUpdate({ isMigration: value })}
+              onClick={() => handleSelect(value)}
               className={`
                 p-4 rounded-xl border transition-all duration-200 text-center
                 ${isSelected
@@ -163,13 +179,13 @@ function StepMigration({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (
               `}
             >
               <p className={`text-lg font-semibold ${isSelected ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>{label}</p>
-              {value && <p className="text-xs text-[var(--text-muted)] mt-1">+£{MIGRATION_FEE}</p>}
+              <p className="text-xs text-[var(--text-muted)] mt-1">+£{value ? MIGRATION_FEE : BASE_PRICE}</p>
             </button>
           );
         })}
       </div>
 
-      {state.isMigration && (
+      {state.migrationChoiceMade && state.isMigration && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
@@ -179,7 +195,7 @@ function StepMigration({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (
             <svg className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>Site audit, content transfer, and URL redirect mapping are included in the migration fee.</span>
+            <span>Migration base includes audit and transfer setup. Any selected pages below are +£50/page.</span>
           </div>
         </motion.div>
       )}
@@ -199,7 +215,6 @@ function StepPages({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (part
   const allOptional = recs.pages.optional;
 
   const togglePage = (pageId: string) => {
-    if (isDefaultPage(businessType, pageId)) return;
     const isSelected = state.selectedPages.includes(pageId);
     onUpdate({
       selectedPages: isSelected
@@ -223,26 +238,35 @@ function StepPages({ state, onUpdate }: { state: QuoteFlowState; onUpdate: (part
         </p>
       </div>
 
-      {/* Default pages (included in base, non-dismissible) */}
+      {/* Default pages (pre-selected, editable) */}
       <div className="space-y-1.5">
         <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-1 mb-2">Included (recommended)</p>
         {defaultPages.map((pageId) => {
           const page = PAGES.find((p) => p.id === pageId);
           if (!page) return null;
+          const isSelected = state.selectedPages.includes(pageId);
+
           return (
-            <div
+            <button
               key={pageId}
-              className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] opacity-75"
+              onClick={() => togglePage(pageId)}
+              className={`
+                w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all duration-200
+                ${isSelected
+                  ? 'bg-[var(--accent-subtle)] border-[var(--border-active)]'
+                  : 'bg-[var(--bg-card)] border-[var(--border)] hover:bg-[var(--bg-card-hover)]'
+                }
+              `}
             >
-              <div className="w-5 h-5 rounded bg-[var(--accent-muted)] border border-[rgba(34,211,238,0.2)] flex items-center justify-center flex-shrink-0">
-                <CheckIcon />
+              <div className={`w-5 h-5 rounded border transition-all duration-200 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[var(--accent)] border-[var(--accent)]' : 'border-[var(--text-muted)]'}`}>
+                {isSelected && <CheckIcon />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--text-primary)]">{page.label}</p>
                 <p className="text-xs text-[var(--text-muted)]">{page.description}</p>
               </div>
               <span className="text-xs text-[var(--text-muted)] font-mono">included</span>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -376,9 +400,9 @@ function StepMigrationPages({ state, onUpdate }: { state: QuoteFlowState; onUpda
   return (
     <div className="space-y-4">
       <div className="p-4 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-muted)]">
-        <p className="text-[var(--text-primary)] font-medium">Which pages from your old site do you want to migrate?</p>
+        <p className="text-[var(--text-primary)] font-medium">Do you want to add extra pages to your old site pages?</p>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Each page migration costs <span className="font-semibold text-[var(--accent)]">+£{PRICE_PER_EXTRA_PAGE}/page</span>. Select all the pages you&apos;d like to transfer.
+          Every selected page is billed at <span className="font-semibold text-[var(--accent)]">+£{PRICE_PER_EXTRA_PAGE}/page</span> on top of the migration base.
         </p>
       </div>
 
@@ -673,7 +697,7 @@ function StepSummary({ state, onGoToStep }: { state: QuoteFlowState; onGoToStep:
                 { label: 'Pages', value: `${selectedMigrationPages.length} migration page${selectedMigrationPages.length !== 1 ? 's' : ''}`, step: 2 },
               ]
             : [
-                { label: 'Pages', value: `${selectedPages.length} optional page${selectedPages.length !== 1 ? 's' : ''}`, step: 2 },
+                { label: 'Pages', value: `${selectedPages.length} selected page${selectedPages.length !== 1 ? 's' : ''}`, step: 2 },
               ]),
           ...(state.isMigration ? [{ label: 'Revamp', value: state.isRevamp ? 'Yes' : 'No', step: 3 }] : []),
           { label: 'Features', value: `${selectedFeatures.length} selected`, step: state.isMigration ? 4 : 3 },
